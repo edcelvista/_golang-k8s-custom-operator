@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  custom-operator
+  namespace: demo
+  labels:
+    app:  custom-operator
+    env: dev
+spec:
+  selector:
+    matchLabels:
+      app: custom-operator
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app:  custom-operator
+    spec:
+      # initContainers:
+        # Init containers are exactly like regular containers, except:
+          # - Init containers always run to completion.
+          # - Each init container must complete successfully before the next one starts.
+      containers:
+      - name:  custom-operator
+        image:  edcelvista/ubuntu24-network-tools:v9-k8s-crd
+        command: ["app-linux"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        env:
+          - name: CUSTOM_KUBE_CONFIG_PATH
+            value: "/opt/config/config"
+          - name: TARGETNAMESPACE
+            value: "demo"
+          - name: CRDNAME
+            value: "myapps.k8s.edcelvista.com"
+          - name: CRDGROUP
+            value: "k8s.edcelvista.com"
+          - name: CRDVERSION
+            value: "v1"
+          - name: CRDRESOURCE
+            value: "myapps"
+          - name: APPNAME
+            value: "demo-crd-resource"
+          - name: INVERVAL
+            value: "30"
+        volumeMounts:
+        - name: config-volume
+          mountPath: "/opt/config"
+          readOnly: true
+        - name: localtime
+          mountPath: /etc/localtime
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kubeconfig
+        - name: localtime
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+      restartPolicy: Always
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kubeconfig
+  namespace: demo
+data:
+  config: |
+    apiVersion: v1
+    clusters:
+    - cluster:
+        certificate-authority-data: <omitted>
+        server: https://172.31.24.226:6443
+      name: kubernetes-aws
+    contexts:
+    - context:
+        cluster: kubernetes-aws
+        user: kubernetes-aws-admin
+      name: kubernetes-aws-admin@kubernetes
+    current-context: kubernetes-aws-admin@kubernetes
+    kind: Config
+    preferences: {}
+    users:
+    - name: kubernetes-aws-admin
+      user:
+        client-certificate-data: <omitted>
+        client-key-data: <omitted>

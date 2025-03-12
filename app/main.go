@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -346,6 +347,15 @@ func (m *MyApp) reconcile(ctx context.Context) {
 			isReconciled = true
 		}
 
+		if m.spec.image != v.Spec.Template.Spec.Containers[0].Image {
+			log.Printf("Reconciling Patching Deployment: %v/%v from %v => %v", v.Namespace, v.Name, v.Spec.Template.Spec.Containers[0].Image, m.spec.image)
+			patch := fmt.Sprintf(`[
+				{ "op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "%v" }
+			]`, m.spec.image)
+			updateDeployment(ctx, v.Name, patch)
+			isReconciled = true
+		}
+
 		if m.spec.replicas != int64(v.Status.AvailableReplicas) {
 			log.Printf("NEED MANUAL RECONCILING: POD Failing... Requires %v available replicas... current %v...", m.spec.replicas, v.Status.AvailableReplicas)
 			isReconciled = true
@@ -355,6 +365,24 @@ func (m *MyApp) reconcile(ctx context.Context) {
 	if !isReconciled {
 		log.Printf("DESIRED ready pods: (%v)... NO ACTION NEEDED...", m.spec.replicas)
 	}
+}
+
+func updateDeployment(ctx context.Context, deploymentName string, patchJson string) {
+	clientSet := ctx.Value("clientSet").(*kubernetes.Clientset)
+	// Create the Deployment
+	deploymentsClient := clientSet.AppsV1().Deployments(TARGETNAMESPACE)
+	ctxDep, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	patch := []byte(patchJson)
+
+	_, err := deploymentsClient.Patch(ctxDep, deploymentName, types.JSONPatchType, patch, metav1.PatchOptions{})
+	if err != nil {
+		log.Fatalf("Failed to apply patch: %v", err)
+	}
+
+	// Output the result
+	log.Printf("Deployment %s patched with %v\n", deploymentName, patchJson)
 }
 
 func scaleDeployment(ctx context.Context, replicas int64, deploymentName string) {

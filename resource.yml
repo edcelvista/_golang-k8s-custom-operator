@@ -4,6 +4,6 @@ metadata:
   name: myapp-resource
   namespace: demo
 spec:
-  image: edcelvista/ubuntu24-network-tools:v9-k8s-crd
+  image: edcelvista/ubuntu24-network-tools:v11-k8s-crd
   replicas: 1
   appSelector: myapp-resource

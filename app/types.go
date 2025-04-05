@@ -28,6 +28,7 @@ const (
 type MyApp struct {
 	metadata MyAppMetadata
 	spec     MyAppSpec
+	ctx      context.Context
 }
 
 type MyAppMetadata struct {

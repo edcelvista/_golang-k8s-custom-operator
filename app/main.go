@@ -237,7 +237,7 @@ func (m *Operator) Run() {
 			namespace: splitted[1],
 		}
 		resourceDetail := crd.get()
-		resourceDetail.reconcile(m.ctx)
+		resourceDetail.reconcile()
 	}
 
 	if len(crdResources) == 0 {
@@ -306,6 +306,7 @@ func (m *CRDResourceDetails) get() *MyApp {
 			replicas:    spec["replicas"].(int64),
 			appSelector: spec["appSelector"].(string),
 		},
+		ctx: m.ctx,
 	}
 
 	return &myApp
@@ -328,7 +329,7 @@ func (m *Deployments) get() *appsv1.DeploymentList {
 	return deployments
 }
 
-func (m *MyApp) reconcile(ctx context.Context) {
+func (m *MyApp) reconcile() {
 	// List pods in the "TARGETNAMESPACE" namespace
 	listOptions := metav1.ListOptions{ // Use metav1.ListOptions to filter by label
 		LabelSelector: fmt.Sprintf("appSelector=%v", m.spec.appSelector),
@@ -336,7 +337,7 @@ func (m *MyApp) reconcile(ctx context.Context) {
 
 	// Check Pods & Deployments
 	deps := Deployments{
-		ctx:         ctx,
+		ctx:         m.ctx,
 		listOptions: listOptions,
 	}
 	deployments := deps.get()
@@ -344,7 +345,7 @@ func (m *MyApp) reconcile(ctx context.Context) {
 
 	if len(deployments.Items) == 0 {
 		log.Printf("⚠️ ⚡️ Reconciling Creating Deployment...")
-		m.createDeployment(ctx)
+		m.createDeployment()
 		return
 	}
 
@@ -353,7 +354,7 @@ func (m *MyApp) reconcile(ctx context.Context) {
 		if m.spec.replicas != int64(v.Status.Replicas) {
 			log.Printf("⚠️ ⚡️ Reconciling Scaling Deployment: %v/%v from %v => %v", v.Namespace, v.Name, v.Status.Replicas, m.spec.replicas)
 			deploymentForScale := ScaleDeploymentParams{
-				ctx:      ctx,
+				ctx:      m.ctx,
 				replicas: m.spec.replicas,
 				name:     v.Name,
 			}
@@ -365,7 +366,7 @@ func (m *MyApp) reconcile(ctx context.Context) {
 			log.Printf("⚠️ ⚡️ Reconciling Patching Deployment: %v/%v from %v => %v", v.Namespace, v.Name, v.Spec.Template.Spec.Containers[0].Image, m.spec.image)
 			patch := fmt.Sprintf(`[{ "op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "%v" }]`, m.spec.image)
 			deploymentForUpdate := UpdateDeploymentParams{
-				ctx:       ctx,
+				ctx:       m.ctx,
 				name:      v.Name,
 				patchJson: patch,
 			}
@@ -379,8 +380,8 @@ func (m *MyApp) reconcile(ctx context.Context) {
 	}
 }
 
-func (m *MyApp) createDeployment(ctx context.Context) {
-	clientSet := ctx.Value(clientSet).(*kubernetes.Clientset)
+func (m *MyApp) createDeployment() {
+	clientSet := m.ctx.Value(clientSet).(*kubernetes.Clientset)
 
 	// Define the Deployment
 	deployment := &appsv1.Deployment{
@@ -413,7 +414,7 @@ func (m *MyApp) createDeployment(ctx context.Context) {
 
 	// Create the Deployment
 	deploymentsClient := clientSet.AppsV1().Deployments(TARGETNAMESPACE)
-	ctxDep, cancel := context.WithTimeout(ctx, time.Duration(K8S_TIMEOUT)*time.Second)
+	ctxDep, cancel := context.WithTimeout(m.ctx, time.Duration(K8S_TIMEOUT)*time.Second)
 	defer cancel()
 
 	result, err := deploymentsClient.Create(ctxDep, deployment, metav1.CreateOptions{})

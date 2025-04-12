@@ -25,7 +25,7 @@ spec:
           # - Each init container must complete successfully before the next one starts.
       containers:
       - name:  custom-operator
-        image:  {{ .Values.image.repository }} : {{ .Values.image.tag }}
+        image:  "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["app-linux"]
         resources: {{ .Values.resources }}

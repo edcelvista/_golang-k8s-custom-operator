@@ -1,2 +1,4 @@
 app/app-linux
+app/app-linux-arm64
+app/arm/app-linux-arm64
 vendor

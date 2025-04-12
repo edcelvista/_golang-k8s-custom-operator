@@ -1,64 +1,7 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name:  custom-operator
-  namespace: demo
-  labels:
-    app:  custom-operator
-    env: dev
-spec:
-  selector:
-    matchLabels:
-      app: custom-operator
-  replicas: 0
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app:  custom-operator
-    spec:
-      # initContainers:
-        # Init containers are exactly like regular containers, except:
-          # - Init containers always run to completion.
-          # - Each init container must complete successfully before the next one starts.
-      containers:
-      - name:  custom-operator
-        image:  edcelvista/ubuntu24-network-tools:v11-k8s-crd
-        command: ["app-linux"]
-        resources:
-          requests:
-            cpu: 100m
-            memory: 100Mi
-          limits:
-            cpu: 100m
-            memory: 100Mi
-        envFrom:
-          - configMapRef:
-              name: operator-cm
-        volumeMounts:
-        - name: config-volume
-          mountPath: "/opt/config"
-          readOnly: true
-        - name: localtime
-          mountPath: /etc/localtime
-      volumes:
-        - name: config-volume
-          configMap:
-            name: kubeconfig
-        - name: localtime
-          hostPath:
-            path: /usr/share/zoneinfo/Asia/Shanghai
-      restartPolicy: Always
----
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: kubeconfig
-  namespace: demo
 data:
   config: |
     apiVersion: v1
@@ -79,13 +22,12 @@ data:
     - name: kubernetes-aws-admin
       user:
         client-certificate-data: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURLVENDQWhHZ0F3SUJBZ0lJZnhybWt2T1VCY2d3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRFeE1Ea3dOVEExTXpkYUZ3MHlOVEV4TURrd05URXdNemxhTUR3eApIekFkQmdOVkJBb1RGbXQxWW1WaFpHMDZZMngxYzNSbGNpMWhaRzFwYm5NeEdUQVhCZ05WQkFNVEVHdDFZbVZ5CmJtVjBaWE10WVdSdGFXNHdnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDNTRlMkgKR29tZTlwaTlCMkF3L3ZuWC9GMFI4V0Nwc3FQREcwblNOVDhZdDNmZEYxQnN2WExIQVNJSW5idmFBUGk3ZXpGcQpZNWZHMEpudEZKVGVRS3NBeHo0bXM1SUFxemk2ZTZxL2dVMFUrTFBHcTg1MDg2N2FHaENtbzZKN3dRcXRpV1FzCnV5RFU4clVpZ0c1K3lSTzFTQmNrZzhzZFhJVVl1TStjVUNWNWFHTzJEVk5JSWRKalZQU1AwM245MW16eEdsY2EKdktpYk1UZy9CVWlsNFlPN0hpdEdvVm9QZzlkMnNMTGNBNGdqcVJZVStGT0JRZTdVU0F1MHlzRzgvbGtOVTFodQpIRGFjYlJ1cjZna2NKSjh6YnhlblU4MWZBUTRLQkNiSDNwK09hSnpVcXJQelJzSEZ4MUttZ2ZKdTFZaXZZMXYvCi94OUU2dHBCMXRvUE5odmpBZ01CQUFHalZqQlVNQTRHQTFVZER3RUIvd1FFQXdJRm9EQVRCZ05WSFNVRUREQUsKQmdnckJnRUZCUWNEQWpBTUJnTlZIUk1CQWY4RUFqQUFNQjhHQTFVZEl3UVlNQmFBRktpYTg3UVdzQk52SURHcwpMeEJzd2dkRlJmNGNNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUF6RG0vNnNHRm92Z1BydWlGZ0srcUw4MEI5Cm9GN1VoZW5EZUNEdEFtVXdmaFRVTk45TUwxd3BZSkFEK1hVME0yRTRIUGlZbE1DZEc4YU9lUERERHRuajc5MmcKdllnS2lNemFRRmdoSXFBRmZWdFd4RnZSUE1aYytGQ1JVTHROcFVIQTRUUEw2T0dVTzJLM2dmZkxTSGVYN0RqbQpGZllmRjZZVlZkem1vbGlySXZqOXcyKzBSQlYrL3BoT3hpa0Z6djZxcENOZW5vVHJpZHI4RU1tajdZMWlJVUV5CmtxM1hQOXVTU1ZwTi96c1YyNTk0NkVXczkvNE9pbjJmZklGWDZQTVlVVGZyQWFWbUNaZnRSN2VnYWRQNnJOeWQKRnoyem1ZYXNYZnVLNEpVdnA0bkxTQzhKS3ZpUTRnZCtlSGw0TThTSGpOQjRXMmpEcCtJWmF0VEI4a3N0Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
-        client-key-data: <omitted>
+        client-key-data: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFcEFJQkFBS0NBUUVBdWVIdGh4cUpudmFZdlFkZ01QNzUxL3hkRWZGZ3FiS2p3eHRKMGpVL0dMZDMzUmRRCmJMMXl4d0VpQ0oyNzJnRDR1M3N4YW1PWHh0Q1o3UlNVM2tDckFNYytKck9TQUtzNHVudXF2NEZORlBpenhxdk8KZFBPdTJob1FwcU9pZThFS3JZbGtMTHNnMVBLMUlvQnVmc2tUdFVnWEpJUExIVnlGR0xqUG5GQWxlV2hqdGcxVApTQ0hTWTFUMGo5TjUvZFpzOFJwWEdyeW9tekU0UHdWSXBlR0R1eDRyUnFGYUQ0UFhkckN5M0FPSUk2a1dGUGhUCmdVSHUxRWdMdE1yQnZQNVpEVk5ZYmh3Mm5HMGJxK29KSENTZk0yOFhwMVBOWHdFT0NnUW14OTZmam1pYzFLcXoKODBiQnhjZFNwb0h5YnRXSXIyTmIvLzhmUk9yYVFkYmFEelliNHdJREFRQUJBb0lCQVFDdTN6eU42TXBsMFVwNgpNekVzaHdQWFRTVGwxM1ovejM2Kzg3SXNYMGwvNEVLVXJmVk1oNkl1VkFPSHBaVHZrQkJ3bUlJeHU0WXpWVllxCk16Mm1KYUo2dGZiamcvWXNTT2l5ajl0Z0ZLM0d0LzZ4UGpxWnpoTEdQdFZCWUJwaFlJZkNJTW9zUnRPcFlyaEQKd0Iyemkwbk9Od2NHcERKMjZlNlJCblRTY3BmK3NUci9QWWliSzJnWlluc1ZGczJkNXdtRWpEeHFJNVY1MTlicgp1Y25WTHgxM09kejltVDJoRnFKa1Q4d1lvOSs3SzUvbklNMWRhdXVIcS9lRDltcS9lWTNqYy9OTmhWNzVTRG55CjljVTdML25ZYUFkazArS01LTlVzT21QRk5ESkF0QlA3STVaOTVrd2xVVDhOWnU1WlkrSFRrZW93OXZVdFp2TkQKc0RhQU9vcVpBb0dCQU52bUE5dTdDQnVBYWdGRHM3RUhQQVJrQjhvcjRxWUN1SFBIeWNFZlFoVVh5b01GUVJhcApSUGFPVTJLWXBlMzl0citsUCsxeFlBb1VBQXNCSG9uYTNUZWUydXhPY1RUTU84Z3lDdDVtV2xZbWdGL3d2WE1lCjIvcCsxTndVRXVnZmMzZW9iMGowUWU3SzJTNEZ1SzVXUU1wTExWTU84TjJzQzhOamwzZGN0ZUV2QW9HQkFOaG0KUnBRclB6cFR5b3lnQnVDb0Y0S3k1Q0pKdUp1WWpiRG9KcTd3SlRsS09IYkk3eHpKalJwUnltYWpIMUdNUlRuNAphdzRGKzRaZy9lY21YeU9rWUtreXRJaXE3WWpqU3F0MWhYOGFPOUV0UHJTSmxkWUwzUnNoSDlacVJSWHovWjNyCmtIbmIyZUwvSUYya2ZGNlV4MTZzck55ZEtVQzZWVDV4bEgyNHdQdU5Bb0dBYndjcU40MnR3RVVNUU9zd0ZWZ3oKdzN2R094d0JhaFRCa1NQMUNGK0IvQ2h4QmNwblhNdkdtRDZ3ZDMzZmVkUzZxdlVDM0I1OGdWb3IwMktUU3NPSgpJb1pBdjBPMEFSYUZzTVVqbTd0T0xXVnZPQUhUaGdhMHh6dTJ1aEFnbzdjTmxBTWxmVTVtNCt6anowcndQb1lxClhIbXN2dDB5WEpwN3JnSGcvbEYvTzkwQ2dZRUF0WEJEZXhZcnBGYisvQnRzeU02SEwrR1lJQnVadW5RVlVSL0UKMTJhb2Z6bDQwRGUzTEhiZFpSVHcxRSt2QWF2UG0wUnJWazJ6ejc3aEEvOExSQklkclovQytOZi80NGRYWXgxZApPZTJmKzhtb3lxeVZRZXVlanBHZVpTT2pHejRCQm5pdElVOHhoLzhMZnhoYjR0MXhzREt0bVNmNG43bmJvVWlRCkRUMXNLVDBDZ1lCL3FITzhBdDc1K1VYODYyVFk3bUdqNkRjUW0wS3BvbUpaOTdWUHJQUStmN3FXL1VZUkFYaE4KL0xEYXJ0d1RYb1F2WkRxTWNaSFlobS9CUEhRR08vYUsrMkgwaU41a1JUVFBBRGlBYVdvZ0pHQzlOR0w3Ykt5cQo0RzJKR0NodElHaUtjVlhkTjhhQjExSk1uU28xZXY0UlVuV3VtRjlrUkQ5UWxkZFltZUhpeGc9PQotLS0tLUVORCBSU0EgUFJJVkFURSBLRVktLS0tLQo=
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: operator-cm
-  namespace: demo
 data:
   CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
   CRDNAME: "myapps.k8s.edcelvista.com"

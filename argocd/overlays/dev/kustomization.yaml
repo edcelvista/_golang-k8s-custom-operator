@@ -5,4 +5,5 @@ patches:
 - path: deployment-patch.yaml
 
 resources:
+- namespace.yaml
 - ../../base

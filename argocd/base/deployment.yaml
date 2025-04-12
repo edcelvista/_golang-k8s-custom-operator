@@ -24,26 +24,26 @@ spec:
           # - Init containers always run to completion.
           # - Each init container must complete successfully before the next one starts.
       containers:
-      - name:  custom-operator
-        image:  "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["app-linux"]
-        resources: 
-          requests:
-          cpu: 100m
-          memory: 100Mi
-        limits:
-          cpu: 100m
-          memory: 100Mi
-        envFrom:
-          - configMapRef:
-            name: operator-cm
-        volumeMounts:
-        - name: config-volume
-          mountPath: "/opt/config"
-          readOnly: true
-        - name: localtime
-          mountPath: /etc/localtime
+        - name:  custom-operator
+          image:  "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["app-linux"]
+          resources: 
+            requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          envFrom:
+            - configMapRef:
+              name: operator-cm
+          volumeMounts:
+          - name: config-volume
+            mountPath: "/opt/config"
+            readOnly: true
+          - name: localtime
+            mountPath: /etc/localtime
       volumes:
         - name: config-volume
           configMap:

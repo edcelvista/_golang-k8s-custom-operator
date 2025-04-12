@@ -9,7 +9,7 @@ spec:
   selector:
     matchLabels:
       app: custom-operator
-  replicas: {{ .Values.replicaCount }}
+  replicas: 1
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -27,7 +27,7 @@ spec:
       containers:
       - name:  custom-operator
         image:  edcelvista/ubuntu24-network-tools:v13-k8s-crd
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: Always
         command: ["app-linux"]
         resources: 
           requests:

@@ -25,14 +25,14 @@ spec:
           # - Init containers always run to completion.
           # - Each init container must complete successfully before the next one starts.
       containers:
-      - name:  custom-operator
-        image:  edcelvista/ubuntu24-network-tools:v13-k8s-crd
-        imagePullPolicy: Always
-        command: ["app-linux"]
-        resources: 
-          requests:
-            cpu: 100m
-            memory: 100Mi
-          limits:
-            cpu: 100m
-            memory: 100Mi
+        - name:  custom-operator
+          image:  edcelvista/ubuntu24-network-tools:v13-k8s-crd
+          imagePullPolicy: Always
+          command: ["app-linux"]
+          resources: 
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 100Mi

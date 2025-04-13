@@ -30,9 +30,9 @@ metadata:
   name: operator-cm
 data:
   CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
-  CRDNAME: "sectool.k8s.edcelvista.com"
+  CRDNAME: "sectools.k8s.edcelvista.com"
   CRDGROUP: "k8s.edcelvista.com"
-  CRDRESOURCE: "sectool"
+  CRDRESOURCE: "sectools"
   CRDVERSION: "v1"
   EXCLUDENAMESPACE: "argocd,castai-agent,custom-operator,default,krakend,kube-bench,kube-flannel,kube-node-lease,kube-public,kube-system,kyverno,monitoring,nginx-ingress"
   APPNAME: "edcelvistadotcom-aws-tls"

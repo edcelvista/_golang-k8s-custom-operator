@@ -320,13 +320,29 @@ func (m *SecretTarget) get() (*corev1.Secret, error) {
 	return secret, nil
 }
 
+func (m *Namespaces) get() (*corev1.NamespaceList, error) {
+	clientSet := m.ctx.Value(clientSet).(*kubernetes.Clientset)
+
+	// Get all namespaces
+	ns, err := clientSet.CoreV1().Namespaces().List(m.ctx, m.listOptions)
+	if err != nil {
+		return ns, err
+	}
+
+	return ns, nil
+}
+
 func (m *MyApp) reconcile() {
 	clientSet := m.ctx.Value(clientSet).(*kubernetes.Clientset)
 
 	listOptions := metav1.ListOptions{}
 
-	// Get all namespaces
-	ns, err := clientSet.CoreV1().Namespaces().List(m.ctx, listOptions)
+	n := Namespaces{
+		ctx:         m.ctx,
+		listOptions: listOptions,
+	}
+
+	ns, err := n.get()
 	if err != nil {
 		log.Fatalf("‼️ Error listing namespace: %v", err)
 	}

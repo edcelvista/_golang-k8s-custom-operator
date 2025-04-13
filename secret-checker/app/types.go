@@ -76,3 +76,8 @@ type CRDResourceDetails struct {
 	gvr  schema.GroupVersionResource
 	name string
 }
+
+type Namespaces struct {
+	ctx         context.Context
+	listOptions metav1.ListOptions
+}

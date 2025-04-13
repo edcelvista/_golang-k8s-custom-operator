@@ -1,7 +1,5 @@
-custom-operator-deployment-checker/app-linux
-custom-operator-deployment-checker/app-linux-arm64
-custom-operator-deployment-checker/arm/app-linux-arm64
-custom-operator-secret-checker/app-linux
-custom-operator-secret-checker/app-linux-arm64
-custom-operator-secret-checker/arm/app-linux-arm64
+deployment-checker/app/app-linux
+deployment-checker/app/arm/app-linux-arm64
+secret-checker/app/app-linux
+secret-checker/app/arm/app-linux-arm64
 vendor

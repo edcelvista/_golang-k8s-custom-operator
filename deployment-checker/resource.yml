@@ -1,0 +1,9 @@
+apiVersion: "k8s.edcelvista.com/v1"
+kind: MyApp
+metadata:
+  name: myapp-resource
+  namespace: demo
+spec:
+  image: edcelvista/ubuntu24-network-tools:v13-k8s-crd
+  replicas: 1
+  appSelector: myapp-resource

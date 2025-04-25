@@ -203,9 +203,8 @@ func main() {
 
 func checkNodes(ctx context.Context) {
 	clientSet := ctx.Value(clientSet).(*kubernetes.Clientset)
-	nodeListOptions := ctx.Value(crdListOptions).(metav1.ListOptions)
 
-	nodes, err := clientSet.CoreV1().Nodes().List(ctx, nodeListOptions)
+	nodes, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Fatalf("‼️ Error listing nodes: %v\n", err)
 	}

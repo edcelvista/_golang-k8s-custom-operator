@@ -53,8 +53,8 @@ spec:
             mountPath: /etc/localtime
       volumes:
         - name: certs-volume
-          configMap:
-            name: certs
+          secret:
+            secret: certs
         - name: config-volume
           configMap:
             name: kubeconfig

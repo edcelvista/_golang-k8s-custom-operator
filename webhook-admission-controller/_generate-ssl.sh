@@ -1,2 +1,2 @@
 #!/bin/bash
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=webhook.custom-webhook.svc/O=edcelvistadotcom"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=*.custom-webhook.svc/O=edcelvistadotcom"

@@ -54,7 +54,7 @@ spec:
       volumes:
         - name: certs-volume
           secret:
-            secret: certs
+            secretName: certs
         - name: config-volume
           configMap:
             name: kubeconfig

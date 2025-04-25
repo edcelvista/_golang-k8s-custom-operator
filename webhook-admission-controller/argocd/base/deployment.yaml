@@ -40,7 +40,7 @@ spec:
                 name: webhook-cm
           ports:
           - name: webport
-            containerPort: 8000
+            containerPort: 8443
             protocol: TCP
           volumeMounts:
           - name: config-volume

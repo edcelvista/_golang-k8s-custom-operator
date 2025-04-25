@@ -37,4 +37,4 @@ data:
   EXCLUDENAMESPACE: "argocd,castai-agent,custom-operator,default,krakend,kube-bench,kube-flannel,kube-node-lease,kube-public,kube-system,kyverno,monitoring,nginx-ingress"
   APPNAME: "edcelvistadotcom-aws-tls"
   INVERVAL: "30"
-  PORT: ":8000"
+  PORT: ":8443"

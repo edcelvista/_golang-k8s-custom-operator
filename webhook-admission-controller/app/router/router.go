@@ -1,6 +1,7 @@
 package router
 
 import (
+	"crypto/tls"
 	"log"
 	"net/http"
 	"os"
@@ -32,16 +33,29 @@ func (m *Router) WebhookRoutes() *mux.Router {
 func Run() {
 	// Load .env file
 	err := godotenv.Load()
-	port := ":8000"
+	port := ":8443"
+
+	// TLS config
+	cert := "./tls.crt"
+	key := "./tls.key"
+
 	if err != nil {
 		log.Println("⚠️ Error loading .env file")
 		// Get environment variables
 		if os.Getenv("PORT") != "" {
 			port = os.Getenv("PORT")
 		}
+		if os.Getenv("SSL_CERT") != "" {
+			cert = os.Getenv("SSL_CERT")
+		}
+		if os.Getenv("SSL_KEY") != "" {
+			key = os.Getenv("SSL_KEY")
+		}
 		log.Printf("⚠️ Defaulting to Port %v", port)
 	} else {
 		port, _ = os.LookupEnv("PORT")
+		cert, _ = os.LookupEnv("SSL_CERT")
+		key, _ = os.LookupEnv("SSL_KEY")
 		log.Println("💡 Found .env")
 	}
 
@@ -55,9 +69,24 @@ func Run() {
 
 	http.Handle("/", muxRouter)
 
+	// TLS config
+	cfg := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	// TLS config
+	server := &http.Server{
+		Addr:      port,
+		Handler:   muxRouter,
+		TLSConfig: cfg,
+	}
+
 	log.Printf("💡 ⚡️ Mux API Running @ %s \n", port)
-	err = http.ListenAndServe(port, muxRouter)
+	// err = http.ListenAndServe(port, muxRouter)
+
+	// TLS config
+	err = server.ListenAndServeTLS(cert, key)
 	if err != nil {
-		log.Fatalf("‼️ Failed to start router %s", err)
+		log.Fatalf("‼️ Failed to start router %s with %v %v", err, cert, key)
 	}
 }

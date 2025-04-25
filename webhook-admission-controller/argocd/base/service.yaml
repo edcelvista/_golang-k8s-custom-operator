@@ -6,8 +6,8 @@ spec:
   ports:
     - name: webport
       protocol: TCP
-      port: 80
-      targetPort: 8000
+      port: 443
+      targetPort: 8443
   selector:
     app: webhook-operator
   type: ClusterIP

@@ -15,7 +15,7 @@ COPY webhook-linux /usr/local/bin/
 
 RUN chmod ugo+x /usr/local/bin/webhook-linux
 
-EXPOSE 8000
+EXPOSE 8443
 
 # command: ["sleep", "infinity"]
 CMD [webhook-linux]

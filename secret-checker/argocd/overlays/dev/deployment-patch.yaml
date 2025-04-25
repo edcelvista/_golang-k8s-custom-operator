@@ -36,6 +36,3 @@ spec:
             limits:
               cpu: 200m
               memory: 200Mi
-          volumeMounts:
-          - name: config-volume
-            mountPath: "/opt/config-disabled"

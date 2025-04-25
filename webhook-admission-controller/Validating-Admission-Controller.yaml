@@ -10,11 +10,11 @@ webhooks:
         operations: ["CREATE"]
         resources: ["pods"]
     clientConfig:
-      url: https://webhook.custom-webhook.svc.cluster.local/webhook/validating/always-allow
-      # service:
-      #   name: webhook-service
-      #   namespace: default
-      #   path: "/validate"
-      # caBundle: <base64-encoded-CA>
+      # url: https://webhook.custom-webhook.svc.cluster.local/webhook/validating/always-allow
+      service:
+        name: webhook
+        namespace: custom-webhook
+        path: "/webhook/validating/always-allow"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURWVENDQWoyZ0F3SUJBZ0lVQWNLMzVxdTJyYWwwY1RXZTErVUY4TkNUbkY4d0RRWUpLb1pJaHZjTkFRRUwKQlFBd09qRWRNQnNHQTFVRUF3d1VLaTVqZFhOMGIyMHRkMlZpYUc5dmF5NXpkbU14R1RBWEJnTlZCQW9NRUdWawpZMlZzZG1semRHRmtiM1JqYjIwd0hoY05NalV3TkRJMU1USXpNVFV3V2hjTk1qWXdOREkxTVRJek1UVXdXakE2Ck1SMHdHd1lEVlFRRERCUXFMbU4xYzNSdmJTMTNaV0pvYjI5ckxuTjJZekVaTUJjR0ExVUVDZ3dRWldSalpXeDIKYVhOMFlXUnZkR052YlRDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBSWhoNjF2MgpTTVJ4Snd4R0Rsb3ZZZUMvSHRhTVBONEFxelNiRU1uV2ViQzJKOTFaalhCb2Ztd0hqSEF4OHpqekV6cjRXdVEvCkVVd0lHT1NKSW05eVpEQ1RkbWZlenFkL1JNeW4xRjhTcDE5VTc1eThaaU41TWQ1UStTdG5iaUZ2YWNwZjlBZEsKSDM4R204bXFZako1MlNsOHFHZ3Nob2pPUlp3WHVoV0NsckpIUElkaFVlUy81VFowOUxZa3BBcUoybFgzbW9sUQpBZGgwMlZlQnlPMEtKYkFERm9RQkRUMi83T3hQSnFUNnhUeld4czBYb0o5cmVOR2twbFZEeE5XdlRjZTZxcnpKCndTNS9vTkdCcStlRUxWdE5OTUdINS9VdDJiSGRCNFdmVXNCb1BERzN3cFdVWXVLYXNQNTZXWCt1b2pXNG1oUnUKS2xwQWZUZzBSWFVZVEJNQ0F3RUFBYU5UTUZFd0hRWURWUjBPQkJZRUZQd0Zub0V4aWdRSzAyQVptM0gzVytJYwpEcjRjTUI4R0ExVWRJd1FZTUJhQUZQd0Zub0V4aWdRSzAyQVptM0gzVytJY0RyNGNNQThHQTFVZEV3RUIvd1FGCk1BTUJBZjh3RFFZSktvWklodmNOQVFFTEJRQURnZ0VCQUJYeklCLzNIa1RNVkw3ZE1KQXg4WTZGODFrY1IzdTIKayt1andBdXp2blR5ejdNbXVhc3F5U1A5RlA0M04renNWRFRkMDc2M2RmeFFYSkJndndwazVZSEtyd2lJSWtrdApPRWk1MXJ6YlZqZUV2bWNLSGxpSkxtdUc2elZuMzgxbisydVVzcDVmSE5kNmFtUzFkN3FIZllrNXJjKzRKYkxmClU1MXlmZHh6REZmZGxCMkF4WG9EK0xveG1wWmtBTEdqQmFob3dUN21PdG9WTnBNb2lrWnYyR1gvWUlLeDRYdlAKdm93TkhLUHU4MEJFWkU3MTJzVnBEMURTb1BGN0V5bS9TTlJwb0FZZmpHSmFZSG1zamQ0MXFLL0k3UERIcW9tdgpBTWdmQWlrcW44MEdQMmsvSVBBUFNCY3FjNXp0MXU4MWx5KzBzV2xOblQ2dXZLQ2t1eWhHK1J3PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
     admissionReviewVersions: ["v1"]
     sideEffects: None

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	authv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -164,6 +165,10 @@ func main() {
 
 	// Init Connections
 	cs, cse, csed := initConnection()
+
+	// get user context
+	review, _ := cs.AuthenticationV1().SelfSubjectReviews().Create(ctx, &authv1.SelfSubjectReview{}, metav1.CreateOptions{})
+	log.Printf("💡 Current User: %v part of %v", review.Status.UserInfo.Username, review.Status.UserInfo.Groups)
 
 	// Store the object i.e Connections Obj in the context using context.WithValue
 	ctx = context.WithValue(ctx, clientSet, cs)

@@ -32,12 +32,18 @@ func (m *Router) WebhookRoutes() *mux.Router {
 func Run() {
 	// Load .env file
 	err := godotenv.Load()
+	port := ":8000"
 	if err != nil {
-		log.Fatal("‼️ Error loading .env file")
+		log.Println("⚠️ Error loading .env file")
+		// Get environment variables
+		if os.Getenv("PORT") != "" {
+			port = os.Getenv("PORT")
+		}
+		log.Printf("⚠️ Defaulting to Port %v", port)
+	} else {
+		port, _ = os.LookupEnv("PORT")
+		log.Println("💡 Found .env")
 	}
-
-	// Get environment variables
-	port := os.Getenv("PORT")
 
 	muxRouter := mux.NewRouter()
 	router := Router{

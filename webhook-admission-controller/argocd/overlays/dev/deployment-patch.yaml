@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-operator
+  labels:
+    app: webhook-operator
+    env: dev
+spec:
+  selector:
+    matchLabels:
+      app: webhook-operator
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: webhook-operator
+    spec:
+      # initContainers:
+        # Init containers are exactly like regular containers, except:
+          # - Init containers always run to completion.
+          # - Each init container must complete successfully before the next one starts.
+      containers:
+        - name:  webhook-operator
+          image:  edcelvista/ubuntu24-network-tools:v19-k8s-crd
+          imagePullPolicy: Always
+          command: ["webhook-linux"]
+          resources: 
+            requests:
+              cpu: 200m
+              memory: 100Mi
+            limits:
+              cpu: 200m
+              memory: 200Mi

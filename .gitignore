@@ -2,4 +2,6 @@ deployment-checker/app/app-linux
 deployment-checker/app/arm/app-linux-arm64
 secret-checker/app/app-linux
 secret-checker/app/arm/app-linux-arm64
+webhook-admission-controller/app/app-linux
+webhook-admission-controller/app/arm/app-linux-arm64
 vendor

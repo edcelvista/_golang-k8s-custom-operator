@@ -26,7 +26,7 @@ spec:
           # - Each init container must complete successfully before the next one starts.
       containers:
         - name:  custom-operator
-          image:  edcelvista/ubuntu24-network-tools:v14-k8s-crd
+          image:  edcelvista/ubuntu24-network-tools:v15-k8s-crd
           imagePullPolicy: Always
           command: ["custom-operator-secret-recon-linux"]
           resources: 

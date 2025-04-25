@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -111,6 +112,11 @@ func initConnection() (*kubernetes.Clientset, *apiextensionsclientset.Clientset,
 	config, err := clientcmd.BuildConfigFromFlags("", KUBECONFIG)
 	if err != nil {
 		log.Fatalf("‼️ Error loading kubeconfig: %v", err)
+		log.Println("💡 Defaulting to service account...")
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			log.Fatalf("‼️ Error loading kubeconfig: %v", err)
+		}
 	}
 
 	// Create clientset
@@ -152,7 +158,7 @@ func main() {
 
 	isConfigExist := checkKubeConfig()
 	if !isConfigExist {
-		log.Fatalf("‼️ Failed to find the kube/config. isConfigExist: %v", isConfigExist)
+		log.Printf("‼️ Failed to find the kube/config. isConfigExist: %v", isConfigExist)
 	}
 	log.Println("IsKubeConfigExist:", strconv.FormatBool(isConfigExist))
 

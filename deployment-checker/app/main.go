@@ -113,7 +113,7 @@ func initConnection() (*kubernetes.Clientset, *apiextensionsclientset.Clientset,
 	// Load kubeconfig file (for running locally)
 	config, err := clientcmd.BuildConfigFromFlags("", KUBECONFIG)
 	if err != nil {
-		log.Fatalf("‼️ Error loading kubeconfig: %v", err)
+		log.Printf("‼️ Error loading kubeconfig: %v", err)
 		log.Println("💡 Defaulting to service account...")
 		config, err = rest.InClusterConfig()
 		if err != nil {

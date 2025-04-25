@@ -81,7 +81,7 @@ func Run() {
 		TLSConfig: cfg,
 	}
 
-	log.Printf("💡 ⚡️ Mux API Running @ %s \n", port)
+	log.Printf("💡 ⚡️ Mux API Running @ %s with tls %v %v \n", port, cert, key)
 	// err = http.ListenAndServe(port, muxRouter)
 
 	// TLS config

@@ -40,6 +40,10 @@ data:
   PORT: ":8443"
   SSL_CERT: "/certs/tls.crt"
   SSL_KEY: "/certs/tls.key"
+  VALIDATE_LABEL: "costCenter,tenantName,supportEmail"
+  MUTATE_PATCH_OP: "add"
+  MUTATE_PATCH_TARGET: "/metadata/labels/mylabel"
+  MUTATE_PATCH_VALUE: "myvalue"
 ---
 apiVersion: v1
 data:

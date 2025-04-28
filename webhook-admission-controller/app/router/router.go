@@ -2,9 +2,13 @@ package router
 
 import (
 	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 
@@ -15,6 +19,53 @@ import (
 
 type Router struct {
 	r *mux.Router
+}
+
+type CertsAndKeys struct {
+	cert string
+	key  string
+}
+
+func (m *CertsAndKeys) checkCerts() {
+	// Load certificate
+	certPath := m.cert
+	certData, err := ioutil.ReadFile(certPath)
+	if err != nil {
+		log.Fatalf("‼️ Error reading certificate: %v %v", err, m.cert)
+	}
+
+	// Decode the PEM data
+	block, _ := pem.Decode(certData)
+	if block == nil {
+		log.Fatalf("Failed to decode PEM block")
+	}
+
+	// Parse certificate
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		log.Fatalf("‼️ Error parsing certificate: %v %v", err, m.cert)
+	}
+
+	// Check if the certificate is expired
+	currentTime := time.Now()
+	if currentTime.After(cert.NotAfter) {
+		log.Println("‼️ Certificate has expired.")
+	} else {
+		log.Println("💡 Certificate is valid.")
+	}
+
+	// Check the NotBefore field (if the certificate is not yet valid)
+	if currentTime.Before(cert.NotBefore) {
+		log.Println("‼️ Certificate is not yet valid.")
+	} else {
+		log.Println("💡 Certificate is within the valid period.")
+	}
+
+	// Optionally, you could also validate other parts, like the issuer and subject
+	log.Println("🔑 Issuer:", cert.Issuer)
+	log.Println("🔑 Subject:", cert.Subject)
+	log.Println("🔑 Not After:", cert.NotAfter)
+	log.Println("🔑 Not Before:", cert.NotBefore)
 }
 
 func (m *Router) PingRoutes() *mux.Router {
@@ -81,7 +132,14 @@ func Run() {
 		TLSConfig: cfg,
 	}
 
-	log.Printf("💡 ⚡️ Mux API Running @ %s with tls %v %v \n", port, cert, key)
+	tlsCertsAndKey := CertsAndKeys{
+		cert: cert,
+		key:  key,
+	}
+
+	tlsCertsAndKey.checkCerts()
+
+	log.Printf("💡 ⚡️ Mux API Running 📦 %s with 🔑 %v %v \n", port, cert, key)
 	// err = http.ListenAndServe(port, muxRouter)
 
 	// TLS config

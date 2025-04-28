@@ -34,8 +34,6 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
 
-	log.Printf("💡 Received Validating Webhook %v", reqParams["name"])
-
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
@@ -53,6 +51,8 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not unmarshal raw pod object", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("💡 Received Validating Webhook %v event object source %v/%v", reqParams["name"], pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 
 	res := &admissionv1.AdmissionResponse{
 		UID:     admissionReviewReq.Request.UID,
@@ -78,7 +78,7 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	res.Result = &metav1.Status{
 		Message: message,
 	}
-	log.Printf("💡 ⚡️ Validating Webhook Message: %v", message)
+	log.Printf("💡 ⚡️ Validating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, message)
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
@@ -90,8 +90,6 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
-
-	log.Printf("💡 Received Mutating Webhook %v", reqParams["name"])
 
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview
@@ -110,6 +108,8 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not unmarshal raw pod object", http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("💡 Received Mutating Webhook %v %v/%v", reqParams["name"], pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 
 	res := &admissionv1.AdmissionResponse{
 		UID:     admissionReviewReq.Request.UID,
@@ -141,7 +141,7 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 			return &pt
 		}()
 
-		log.Printf("💡 ⚡️ Mutating Webhook Message: %v", patches)
+		log.Printf("💡 ⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, patches)
 	}
 
 	// Build response

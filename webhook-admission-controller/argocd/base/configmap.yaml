@@ -43,6 +43,7 @@ data:
   VALIDATE_LABEL: "costCenter,tenantName,supportEmail"
   MUTATE_PATCH_OP: "add"
   MUTATE_PATCH_TARGET: "/metadata/labels/mutatedLabel"
+  MUTATE_PATCH_LABEL: "mutatedLabel"
   MUTATE_PATCH_VALUE: "mutatedLabelValue"
 ---
 apiVersion: v1

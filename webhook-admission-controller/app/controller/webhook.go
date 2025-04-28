@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func WebhookHandlerGET(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +74,11 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res.Warnings = warnings
+	message := strings.Join(warnings, " | ")
+	res.Result = &metav1.Status{
+		Message: message,
+	}
+	log.Printf("💡 ⚡️ Validating Webhook Message: %v", message)
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
@@ -135,6 +140,8 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 			pt := admissionv1.PatchTypeJSONPatch
 			return &pt
 		}()
+
+		log.Printf("💡 ⚡️ Mutating Webhook Message: %v", patches)
 	}
 
 	// Build response

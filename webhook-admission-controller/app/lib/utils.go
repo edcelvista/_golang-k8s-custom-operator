@@ -20,4 +20,7 @@ func Init() {
 	}
 
 	log.Printf("💡 Debug enabled: %v", debug)
+	// •	%v → Print the values
+	// •	%+v → Print field names and values
+	// •	%#v → Print Go syntax (main.Person{Name:"Alice", Age:30})
 }

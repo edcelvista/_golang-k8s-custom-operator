@@ -35,8 +35,6 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
 
-	Lib.Debug(r.Body)
-
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
@@ -47,6 +45,8 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	Lib.Debug(fmt.Sprintf("[REQ] %+v", admissionReviewReq))
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {
@@ -94,8 +94,6 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
 
-	Lib.Debug(r.Body)
-
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
@@ -106,6 +104,8 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	Lib.Debug(fmt.Sprintf("[REQ] %+v", admissionReviewReq))
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {

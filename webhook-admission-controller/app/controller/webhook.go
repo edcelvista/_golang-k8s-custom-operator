@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -46,7 +47,15 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Lib.Debug(fmt.Sprintf("[REQ] %+v", admissionReviewReq))
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	Lib.Debug(fmt.Sprintf("[REQ] %v", string(bodyBytes)))
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {
@@ -105,7 +114,15 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Lib.Debug(fmt.Sprintf("[REQ] %+v", admissionReviewReq))
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	Lib.Debug(fmt.Sprintf("[REQ] %v", string(bodyBytes)))
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {

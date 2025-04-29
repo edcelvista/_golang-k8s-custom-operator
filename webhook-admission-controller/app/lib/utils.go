@@ -8,9 +8,9 @@ import (
 
 var debug = false
 
-func Debug(v ...interface{}) {
+func Debug(v string) {
 	if debug {
-		log.Println(v...)
+		log.Println(v)
 	}
 }
 

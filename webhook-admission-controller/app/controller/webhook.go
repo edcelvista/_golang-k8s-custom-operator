@@ -40,22 +40,20 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
 
-	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("‼️ Error Validating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	Lib.Debug(fmt.Sprintf("[REQ] %+v", string(bodyBytes)))
 
-	bodyBytes, err := io.ReadAll(r.Body)
+	err = json.NewDecoder(r.Body).Decode(&admissionReviewReq)
 	if err != nil {
-		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
+		log.Printf("‼️ Error Validating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
-
-	Lib.Debug(fmt.Sprintf("[REQ] %v", string(bodyBytes)))
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {
@@ -107,22 +105,20 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
 
-	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
-	if err != nil {
-		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	Lib.Debug(fmt.Sprintf("[REQ] %+v", string(bodyBytes)))
 
-	Lib.Debug(fmt.Sprintf("[REQ] %v", string(bodyBytes)))
+	err = json.NewDecoder(r.Body).Decode(&admissionReviewReq)
+	if err != nil {
+		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {

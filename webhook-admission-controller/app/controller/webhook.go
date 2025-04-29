@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -40,15 +41,11 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
 
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("‼️ Error Validating Webhook %v", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	Lib.Debug(fmt.Sprintf("[REQ] %+v", string(bodyBytes)))
+	bodyBytes, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
+	Lib.Debug(fmt.Sprintf("[REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
-	err = json.NewDecoder(r.Body).Decode(&admissionReviewReq)
+	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
 	if err != nil {
 		log.Printf("‼️ Error Validating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -63,7 +60,6 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("💡 Received Validating Webhook %v event object source %v/%v", reqParams["name"], pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-
 	res := &admissionv1.AdmissionResponse{
 		UID:     admissionReviewReq.Request.UID,
 		Allowed: true,
@@ -88,12 +84,15 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	res.Result = &metav1.Status{
 		Message: message,
 	}
-	log.Printf("💡 ⚡️ Validating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, message)
+
+	log.Printf("⚡️ Validating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, Lib.DefaultIfEmpty(message, "no-message"))
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
+	jsonData, _ := json.Marshal(admissionReviewResp)
+	Lib.Debug(fmt.Sprintf("[RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }
 
@@ -105,15 +104,11 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	var admissionReviewReq admissionv1.AdmissionReview
 	var admissionReviewResp admissionv1.AdmissionReview
 
-	bodyBytes, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	Lib.Debug(fmt.Sprintf("[REQ] %+v", string(bodyBytes)))
+	bodyBytes, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
+	Lib.Debug(fmt.Sprintf("[REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
-	err = json.NewDecoder(r.Body).Decode(&admissionReviewReq)
+	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
 	if err != nil {
 		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -127,8 +122,7 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("💡 Received Mutating Webhook %v %v/%v", reqParams["name"], pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
-
+	log.Printf("💡 Received Mutating Webhook %v event object source %v/%v", reqParams["name"], pod.ObjectMeta.Namespace, pod.ObjectMeta.Name)
 	res := &admissionv1.AdmissionResponse{
 		UID:     admissionReviewReq.Request.UID,
 		Allowed: true,
@@ -136,13 +130,13 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the label exists
 	var patchBytes []byte
-	if pod.Labels == nil || pod.Labels["mylabel"] == "" {
+	if pod.Labels == nil || pod.Labels[os.Getenv("MUTATE_PATCH_LABEL")] == "" {
 		// Build patch operations
 		patches := []Model.PatchOperation{
 			{
-				Op:    os.Getenv("PATCH_OP"),
-				Path:  os.Getenv("PATCH_TARGET"), //"/metadata/labels/mylabel",
-				Value: os.Getenv("PATCH_VALUE"),
+				Op:    os.Getenv("MUTATE_PATCH_OP"),
+				Path:  os.Getenv("MUTATE_PATCH_TARGET"), //"/metadata/labels/mylabel",
+				Value: os.Getenv("MUTATE_PATCH_VALUE"),
 			},
 		}
 
@@ -159,12 +153,16 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 			return &pt
 		}()
 
-		log.Printf("💡 ⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, patches)
+		log.Printf("⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, patches)
+	} else {
+		log.Printf("⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, "No Mutation Needed.")
 	}
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
+	jsonData, _ := json.Marshal(admissionReviewResp)
+	Lib.Debug(fmt.Sprintf("[RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }

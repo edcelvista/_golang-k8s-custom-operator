@@ -10,8 +10,15 @@ var debug = false
 
 func Debug(v string) {
 	if debug {
-		log.Println(v)
+		log.Printf("🚨 [DEBUG] %v", v)
 	}
+}
+
+func DefaultIfEmpty(s, def string) string {
+	if s == "" {
+		return def
+	}
+	return s
 }
 
 func Init() {

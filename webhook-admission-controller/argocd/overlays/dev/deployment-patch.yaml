@@ -26,7 +26,7 @@ spec:
           # - Each init container must complete successfully before the next one starts.
       containers:
         - name:  webhook-operator
-          image:  edcelvista/ubuntu24-network-tools:v29-k8s-crd
+          image:  edcelvista/ubuntu24-network-tools:30-k8s-crd
           imagePullPolicy: Always
           command: ["webhook-linux"]
           resources: 

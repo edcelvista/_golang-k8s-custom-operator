@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 
 	Controller "_gorestapi-k8s/controller"
+	Lib "_gorestapi-k8s/lib"
 )
 
 type Router struct {
@@ -138,6 +139,7 @@ func Run() {
 	}
 
 	tlsCertsAndKey.checkCerts()
+	Lib.Init()
 
 	log.Printf("💡 ⚡️ Mux API Running 📦 %s with 🔑 %v %v \n", port, cert, key)
 	// err = http.ListenAndServe(port, muxRouter)
@@ -147,4 +149,5 @@ func Run() {
 	if err != nil {
 		log.Fatalf("‼️ Failed to start router %s with %v %v", err, cert, key)
 	}
+
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	Lib "_gorestapi-k8s/lib"
 	Model "_gorestapi-k8s/model"
 
 	"github.com/gorilla/mux"
@@ -33,6 +34,8 @@ func WebhookHandlerGET(w http.ResponseWriter, r *http.Request) {
 func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
+
+	Lib.Debug(r.Body)
 
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview
@@ -90,6 +93,8 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
+
+	Lib.Debug(r.Body)
 
 	// Parse JSON from request body
 	var admissionReviewReq admissionv1.AdmissionReview

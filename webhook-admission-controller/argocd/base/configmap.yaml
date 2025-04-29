@@ -45,6 +45,7 @@ data:
   MUTATE_PATCH_TARGET: "/metadata/labels/mutatedLabel"
   MUTATE_PATCH_LABEL: "mutatedLabel"
   MUTATE_PATCH_VALUE: "mutatedLabelValue"
+  IS_DEBUG: "true"
 ---
 apiVersion: v1
 data:

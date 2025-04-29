@@ -72,6 +72,7 @@ func (m *CertsAndKeys) checkCerts() {
 func (m *Router) PingRoutes() *mux.Router {
 	m.r.HandleFunc("/ping/{name}", Controller.PingHandlerGET).Methods("GET")
 	m.r.HandleFunc("/ping", Controller.PingHandlerPOST).Methods("POST")
+	m.r.HandleFunc("/echo", Controller.EchoHandlerPOST).Methods("POST")
 	return m.r
 }
 

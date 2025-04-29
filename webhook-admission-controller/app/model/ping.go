@@ -9,3 +9,8 @@ type Ping struct {
 	Ping    string
 	Message map[string]string
 }
+
+type Echo struct {
+	EchoHeaders interface{}
+	EchoData    interface{}
+}

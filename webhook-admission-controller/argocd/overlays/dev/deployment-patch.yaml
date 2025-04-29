@@ -20,13 +20,20 @@ spec:
       labels:
         app: webhook-operator
     spec:
+      # lifecycle:
+      #   postStart:
+      #     exec:
+      #       command: ["/bin/sh", "-c", "echo Hello from postStart"]
+      #   preStop:
+      #     exec:
+      #       command: ["/bin/sh", "-c", "echo Goodbye from preStop"]
       # initContainers:
         # Init containers are exactly like regular containers, except:
           # - Init containers always run to completion.
           # - Each init container must complete successfully before the next one starts.
       containers:
         - name:  webhook-operator
-          image:  edcelvista/ubuntu24-network-tools:30-k8s-crd
+          image:  edcelvista/ubuntu24-network-tools:31-k8s-crd
           imagePullPolicy: Always
           command: ["webhook-linux"]
           resources: 

@@ -51,6 +51,13 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer r.Body.Close()
+
+	if admissionReviewReq.Request == nil {
+		log.Println("‼️ AdmissionReview.Request is nil")
+		http.Error(w, "Invalid AdmissionReview", http.StatusBadRequest)
+		return
+	}
 
 	var pod corev1.Pod
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &pod); err != nil {
@@ -112,6 +119,13 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if admissionReviewReq.Request == nil {
+		log.Println("‼️ AdmissionReview.Request is nil")
+		http.Error(w, "Invalid AdmissionReview", http.StatusBadRequest)
 		return
 	}
 

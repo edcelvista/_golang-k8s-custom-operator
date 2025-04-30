@@ -41,7 +41,7 @@ data:
   SSL_CERT: "/certs/tls.crt"
   SSL_KEY: "/certs/tls.key"
   VALIDATE_LABEL: "costCenter,tenantName,supportEmail"
-  MUTATE_PATCH: "[{ \"op\": \"add\", \"path\": \"/metadata/labels/mutatedLabel\", \"value\": \"mutatedLabelValue\" },  { \"op\": \"add\", \"path\": \"/spec/template/spec/containers/0/lifecycle\", \"value\": { \"postStart\": { \"exec\": { \"command\": [ \"/bin/sh\", \"-c\", \"curl -sk --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"postStart\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'\" ] } }, \"preStop\": { \"exec\": { \"command\": [ \"/bin/sh\", \"-c\", \"curl -sk --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"preStop\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'\" ] } } } }]"
+  MUTATE_PATCH: "[{ \"op\": \"add\", \"path\": \"/metadata/labels/mutatedLabel\", \"value\": \"mutatedLabelValue\" }, { \"op\": \"add\", \"path\": \"/spec/template/spec/containers/0/lifecycle\", \"value\": { \"postStart\": { \"exec\": { \"command\": [ \"/bin/sh\", \"-c\", \"curl -sk --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \\\"postStart\\\": \\\"$POD_NAMESPACE/$POD_NAME with $POD_IP\\\" }'\" ] } }, \"preStop\": { \"exec\": { \"command\": [ \"/bin/sh\", \"-c\", \"curl -sk --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \\\"preStop\\\": \\\"$POD_NAMESPACE/$POD_NAME with $POD_IP\\\" }'\" ] } } } }]"
   IS_DEBUG: "true"
 ---
 apiVersion: v1

@@ -49,10 +49,10 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
-          lifecycle:
-            postStart:
-              exec:
-                command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"postStart\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"preStop\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]
+          # lifecycle:
+          #   postStart:
+          #     exec:
+          #       command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"postStart\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]
+          #   preStop:
+          #     exec:
+          #       command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"preStop\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]

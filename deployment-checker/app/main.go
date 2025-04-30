@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	authv1 "k8s.io/api/authentication/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,6 +32,7 @@ var CRDVERSION string = "v1"
 var CRDRESOURCE string = "myapps"
 
 var APPNAME string = "demo-custom-resource"
+var APPJSONTEMPLATE string = "{ \"apiVersion\": \"apps/v1\", \"kind\": \"Deployment\", \"spec\": { \"selector\": { \"matchLabels\": {} }, \"template\": { \"spec\": { \"containers\": [ { \"command\": [ \"sleep\", \"infinity\" ], \"resources\": {}, \"terminationMessagePath\": \"/dev/termination-log\", \"terminationMessagePolicy\": \"File\", \"imagePullPolicy\": \"IfNotPresent\" } ], \"restartPolicy\": \"Always\", \"terminationGracePeriodSeconds\": 30, \"dnsPolicy\": \"ClusterFirst\", \"securityContext\": {}, \"schedulerName\": \"default-scheduler\" } }, \"strategy\": { \"type\": \"RollingUpdate\", \"rollingUpdate\": { \"maxUnavailable\": \"25%\", \"maxSurge\": \"25%\" } }, \"revisionHistoryLimit\": 10, \"progressDeadlineSeconds\": 600 } }"
 var INTERVAL int = 15
 var K8S_TIMEOUT int32 = 60
 
@@ -46,6 +47,12 @@ func checkRequiredEnv() error {
 	if appName != "" {
 		APPNAME = appName
 		log.Println("💡 Env Config in found", APPNAME)
+	}
+
+	appJsonTemplate := os.Getenv("APPJSONTEMPLATE")
+	if appJsonTemplate != "" {
+		APPJSONTEMPLATE = appJsonTemplate
+		log.Println("💡 Env Config in found", APPJSONTEMPLATE)
 	}
 
 	crdTarget := os.Getenv("CRDNAME")
@@ -162,14 +169,14 @@ func main() {
 	if !isConfigExist {
 		log.Printf("‼️ Failed to find the kube/config. isConfigExist: %v", isConfigExist)
 	}
-	log.Println("IsKubeConfigExist:", strconv.FormatBool(isConfigExist))
+	log.Println("💡 IsKubeConfigExist:", strconv.FormatBool(isConfigExist))
 
 	// Init Connections
 	cs, cse, csed := initConnection()
 
 	// get user context
 	review, _ := cs.AuthenticationV1().SelfSubjectReviews().Create(ctx, &authv1.SelfSubjectReview{}, metav1.CreateOptions{})
-	log.Printf("💡 Current User: %v part of %v", review.Status.UserInfo.Username, review.Status.UserInfo.Groups)
+	log.Printf("💡 Current User: %+v part of %+v", review.Status.UserInfo.Username, review.Status.UserInfo.Groups)
 
 	// Store the object i.e Connections Obj in the context using context.WithValue
 	ctx = context.WithValue(ctx, clientSet, cs)
@@ -210,7 +217,7 @@ func checkNodes(ctx context.Context) {
 		log.Fatalf("‼️ Error listing nodes: %v\n", err)
 	}
 
-	log.Printf("🖥️  NODES: %v", len(nodes.Items))
+	log.Printf("🖥️  NODES: %+v", len(nodes.Items))
 	for _, v := range nodes.Items {
 		log.Println("⚡️ ", v.Name, v.Status.NodeInfo.KubeletVersion, v.Status.NodeInfo.Architecture, v.Status.NodeInfo.MachineID, v.Status.Conditions[4])
 	}
@@ -394,33 +401,25 @@ func (m *MyApp) createDeployment() {
 	clientSet := m.ctx.Value(clientSet).(*kubernetes.Clientset)
 
 	// Define the Deployment
-	deployment := &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      APPNAME,
-			Namespace: TARGETNAMESPACE,
-			Labels:    map[string]string{"appSelector": m.spec.appSelector},
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: int64ToInt32PtrP(m.spec.replicas),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"appSelector": m.spec.appSelector},
-			},
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"appSelector": m.spec.appSelector},
-				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						{
-							Name:    APPNAME,
-							Image:   m.spec.image,
-							Command: []string{"sleep", "infinity"},
-						},
-					},
-				},
-			},
-		},
+	deployment := &appsv1.Deployment{}
+
+	// Unmarshal into the struct
+	err := json.Unmarshal([]byte(APPJSONTEMPLATE), &deployment)
+	if err != nil {
+		log.Fatalf("‼️ Failed to Unmarshal deployment json string: %v", err)
 	}
+
+	// cm based configs
+	deployment.ObjectMeta.Name = APPNAME
+	deployment.ObjectMeta.Namespace = TARGETNAMESPACE
+	deployment.Spec.Template.Spec.Containers[0].Name = APPNAME
+
+	// operator controlled configs
+	deployment.ObjectMeta.Labels = map[string]string{"appSelector": m.spec.appSelector}
+	deployment.Spec.Replicas = int64ToInt32PtrP(m.spec.replicas)
+	deployment.Spec.Selector.MatchLabels = map[string]string{"appSelector": m.spec.appSelector}
+	deployment.Spec.Template.ObjectMeta.Labels = map[string]string{"appSelector": m.spec.appSelector}
+	deployment.Spec.Template.Spec.Containers[0].Image = m.spec.image
 
 	// Create the Deployment
 	deploymentsClient := clientSet.AppsV1().Deployments(TARGETNAMESPACE)

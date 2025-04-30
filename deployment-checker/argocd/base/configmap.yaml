@@ -36,4 +36,5 @@ data:
   CRDVERSION: "v1"
   TARGETNAMESPACE: "demo"
   APPNAME: "demo-crd-resource"
+  APPJSONTEMPLATE: "{ \"apiVersion\": \"apps/v1\", \"kind\": \"Deployment\", \"spec\": { \"selector\": { \"matchLabels\": {} }, \"template\": { \"spec\": { \"containers\": [ { \"command\": [ \"sleep\", \"infinity\" ], \"resources\": {}, \"terminationMessagePath\": \"/dev/termination-log\", \"terminationMessagePolicy\": \"File\", \"imagePullPolicy\": \"IfNotPresent\" } ], \"restartPolicy\": \"Always\", \"terminationGracePeriodSeconds\": 30, \"dnsPolicy\": \"ClusterFirst\", \"securityContext\": {}, \"schedulerName\": \"default-scheduler\" } }, \"strategy\": { \"type\": \"RollingUpdate\", \"rollingUpdate\": { \"maxUnavailable\": \"25%\", \"maxSurge\": \"25%\" } }, \"revisionHistoryLimit\": 10, \"progressDeadlineSeconds\": 600 } }"
   INVERVAL: "30"

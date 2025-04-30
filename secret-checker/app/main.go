@@ -161,14 +161,14 @@ func main() {
 	if !isConfigExist {
 		log.Printf("‼️ Failed to find the kube/config. isConfigExist: %v", isConfigExist)
 	}
-	log.Println("IsKubeConfigExist:", strconv.FormatBool(isConfigExist))
+	log.Println("💡 IsKubeConfigExist:", strconv.FormatBool(isConfigExist))
 
 	// Init Connections
 	cs, cse, csed := initConnection()
 
 	// get user context
 	review, _ := cs.AuthenticationV1().SelfSubjectReviews().Create(ctx, &authv1.SelfSubjectReview{}, metav1.CreateOptions{})
-	log.Printf("💡 Current User: %v part of %v", review.Status.UserInfo.Username, review.Status.UserInfo.Groups)
+	log.Printf("💡 Current User: %+v part of %+v", review.Status.UserInfo.Username, review.Status.UserInfo.Groups)
 
 	// Store the object i.e Connections Obj in the context using context.WithValue
 	ctx = context.WithValue(ctx, clientSet, cs)
@@ -209,7 +209,7 @@ func checkNodes(ctx context.Context) {
 		log.Fatalf("‼️ Error listing nodes: %v\n", err)
 	}
 
-	log.Printf("🖥️  NODES: %v", len(nodes.Items))
+	log.Printf("🖥️  NODES: %+v", len(nodes.Items))
 	for _, v := range nodes.Items {
 		log.Println("⚡️ ", v.Name, v.Status.NodeInfo.KubeletVersion, v.Status.NodeInfo.Architecture, v.Status.NodeInfo.MachineID, v.Status.Conditions[4])
 	}

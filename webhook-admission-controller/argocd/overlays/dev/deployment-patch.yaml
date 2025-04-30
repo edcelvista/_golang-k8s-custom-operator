@@ -20,20 +20,13 @@ spec:
       labels:
         app: webhook-operator
     spec:
-      # lifecycle:
-      #   postStart:
-      #     exec:
-      #       command: ["/bin/sh", "-c", "echo Hello from postStart"]
-      #   preStop:
-      #     exec:
-      #       command: ["/bin/sh", "-c", "echo Goodbye from preStop"]
       # initContainers:
         # Init containers are exactly like regular containers, except:
           # - Init containers always run to completion.
           # - Each init container must complete successfully before the next one starts.
       containers:
         - name:  webhook-operator
-          image:  edcelvista/ubuntu24-network-tools:v31-k8s-crd
+          image:  edcelvista/ubuntu24-network-tools:v32-k8s-crd
           imagePullPolicy: Always
           command: ["webhook-linux"]
           resources: 
@@ -43,3 +36,23 @@ spec:
             limits:
               cpu: 200m
               memory: 200Mi
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"postStart\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "curl -sk curl --location 'https://webhook.custom-webhook.svc:8443/echo' --header 'Content-Type: application/json' --data '{ \"preStop\": \"$POD_NAMESPACE/$POD_NAME with $POD_IP\" }'"]

@@ -43,7 +43,7 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
-	Lib.Debug(fmt.Sprintf("[REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+	Lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
 	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
 	if err != nil {
@@ -99,7 +99,7 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	admissionReviewResp.Response = res
 
 	jsonData, _ := json.Marshal(admissionReviewResp)
-	Lib.Debug(fmt.Sprintf("[RES] %+v", string(jsonData)))
+	Lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }
 
@@ -113,7 +113,7 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
-	Lib.Debug(fmt.Sprintf("[REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+	Lib.Debug(fmt.Sprintf("[MUT] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
 	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
 	if err != nil {
@@ -142,41 +142,27 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 		Allowed: true,
 	}
 
-	// Check if the label exists
-	var patchBytes []byte
-	if pod.Labels == nil || pod.Labels[os.Getenv("MUTATE_PATCH_LABEL")] == "" {
-		// Build patch operations
-		patches := []Model.PatchOperation{
-			{
-				Op:    os.Getenv("MUTATE_PATCH_OP"),
-				Path:  os.Getenv("MUTATE_PATCH_TARGET"), //"/metadata/labels/mylabel",
-				Value: os.Getenv("MUTATE_PATCH_VALUE"),
-			},
-		}
-
-		patchBytes, err = json.Marshal(patches)
-		if err != nil {
-			log.Println("‼️ Error Mutating Webhook could not marshal patch")
-			http.Error(w, "could not marshal patch", http.StatusInternalServerError)
-			return
-		}
-
-		res.Patch = patchBytes
-		res.PatchType = func() *admissionv1.PatchType {
-			pt := admissionv1.PatchTypeJSONPatch
-			return &pt
-		}()
-
-		log.Printf("⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, patches)
-	} else {
-		log.Printf("⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, "No Mutation Needed.")
+	// Build patch operations
+	patchesJson := os.Getenv("MUTATE_PATCH")
+	if patchesJson == "" {
+		log.Println("‼️ Error Mutating Webhook missing patch object parameter")
+		http.Error(w, "missing patch object parameter", http.StatusInternalServerError)
+		return
 	}
+
+	res.Patch = []byte(patchesJson)
+	res.PatchType = func() *admissionv1.PatchType {
+		pt := admissionv1.PatchTypeJSONPatch
+		return &pt
+	}()
+
+	log.Printf("⚡️ Mutating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, patchesJson)
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
 	jsonData, _ := json.Marshal(admissionReviewResp)
-	Lib.Debug(fmt.Sprintf("[RES] %+v", string(jsonData)))
+	Lib.Debug(fmt.Sprintf("[MUT] [RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }

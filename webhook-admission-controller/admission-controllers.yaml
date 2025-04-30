@@ -61,6 +61,6 @@ webhooks:
     namespaceSelector: {}
     objectSelector:
       matchExpressions:
-      - key: custom-webhook.edcelvista.com/validate-always-allow
+      - key: custom-webhook.edcelvista.com/mutate-always-allow
         operator: Exists
     timeoutSeconds: 5

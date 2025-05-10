@@ -23,4 +23,4 @@ MODIFIED_YAML=$(yq eval '
 ' <<< "$MODIFIED_YAML_RQ")
 
 # Print or use
-echo "$MODIFIED_YAML" > output.yaml
+echo "$MODIFIED_YAML" > output.yml

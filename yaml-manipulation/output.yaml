@@ -1,0 +1,25 @@
+container_config:
+  - name: test01
+    namespaces:
+      - namespace1
+      - namespace2
+    resource_quota:
+      requests.cpu: "1"
+      requests.memory: 1Gi
+      limits.cpu: "2"
+      limits.memory: 2Gi
+      pods: "2"
+      persistentvolumeclaims: "5"
+      requests.storage: 5Gi
+  - name: test02
+    resource_quota:
+      requests.cpu: "1"
+      requests.memory: 1Gi
+      limits.cpu: "2"
+      limits.memory: 2Gi
+      pods: "2"
+      persistentvolumeclaims: "5"
+      requests.storage: 5Gi
+    namespaces:
+      - namespace1
+      - namespace2

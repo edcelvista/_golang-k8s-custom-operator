@@ -16,11 +16,12 @@ MODIFIED_YAML_RQ=$(yq eval '
 )
 ' "$INPUT")
 
-MODIFIED_YAML=$(yq eval '
-.container_config[] |= (
-  .namespaces = ["namespace1", "namespace2"]
+arrayObj='[{"name": "test", "name": "test"}]'
+MODIFIED_YAML=$(yq eval "
+.container_config |= map(
+  .namespaces = $arrayObj
 )
-' <<< "$MODIFIED_YAML_RQ")
+" <<< "$MODIFIED_YAML_RQ")
 
 # Print or use
 echo "$MODIFIED_YAML" > output.yml

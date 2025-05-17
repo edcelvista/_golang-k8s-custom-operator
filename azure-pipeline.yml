@@ -1,0 +1,95 @@
+# Go
+# Build your Go project.
+# Add steps that test, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/go
+# Template requirements: *.go and go.mod files in directory
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  GOBIN:  '$(system.defaultWorkingDirectory)/bin' # Go binaries path
+  dockerHubConn: 'dockerHubConnection'
+  imageName: 'edcelvista/ubuntu24-network-tools'
+
+steps:
+
+- script: |
+    mkdir -p '$(GOBIN)'
+    echo '##vso[task.prependpath]$(GOBIN)'
+  displayName: 'Set up the Go workspace'
+
+- script: |
+    ls -la $(system.defaultWorkingDirectory)
+  displayName: 'List files in the working directory'
+
+- script: |
+    cd deployment-checker/app
+    go version
+    if [ ! -f go.mod ]; then
+        go mod init edcelvista.com/k8s/myapps
+    fi
+    go mod tidy
+    go mod download
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux
+    # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux-arm64
+  workingDirectory: '$(system.defaultWorkingDirectory)'
+  displayName: 'Get dependencies, then build'
+
+- script: |
+    cd secret-checker/app
+    go version
+    if [ ! -f go.mod ]; then
+        go mod init edcelvista.com/k8s/myapps
+    fi
+    go mod tidy
+    go mod download
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux
+    # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux-arm64
+  workingDirectory: '$(system.defaultWorkingDirectory)'
+  displayName: 'Get dependencies, then build'
+
+- script: |
+    cd webhook-admission-controller/app
+    go version
+    if [ ! -f go.mod ]; then
+        go mod init edcelvista.com/k8s/myapps
+    fi
+    go mod tidy
+    go mod download
+    if [ -f Gopkg.toml ]; then
+        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+        dep ensure
+    fi
+    GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/webhook-linux
+    # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/webhook-linux-arm64
+  workingDirectory: '$(system.defaultWorkingDirectory)'
+  displayName: 'Get dependencies, then build'
+
+- task: Docker@2
+  displayName: Build Docker Image
+  inputs:
+    command: 'build'
+    Dockerfile: '**/Dockerfile'  # or specify the path directly e.g., 'Dockerfile'
+    tags: |
+      $(imageName):$(Build.BuildId)
+
+- task: Docker@2
+  displayName: Push Docker Image
+  inputs:
+    command: 'push'
+    repository: '$(imageName)'
+    tags: |
+      $(Build.BuildId)
+    containerRegistry: $(dockerHubConn)

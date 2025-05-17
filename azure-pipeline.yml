@@ -41,7 +41,7 @@ steps:
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux-arm64
   workingDirectory: '$(system.defaultWorkingDirectory)'
-  displayName: 'Get dependencies, then build'
+  displayName: '[deployment-checker] Get dependencies, then build'
 
 - script: |
     cd secret-checker/app
@@ -58,7 +58,7 @@ steps:
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux-arm64
   workingDirectory: '$(system.defaultWorkingDirectory)'
-  displayName: 'Get dependencies, then build'
+  displayName: '[secret-checker] Get dependencies, then build'
 
 - script: |
     cd webhook-admission-controller/app
@@ -75,15 +75,16 @@ steps:
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/webhook-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/webhook-linux-arm64
   workingDirectory: '$(system.defaultWorkingDirectory)'
-  displayName: 'Get dependencies, then build'
+  displayName: '[webhook-controller] Get dependencies, then build'
 
 - task: Docker@2
   displayName: Build Docker Image
   inputs:
     command: 'build'
+    repository: '$(imageName)'
     Dockerfile: '**/Dockerfile'  # or specify the path directly e.g., 'Dockerfile'
     tags: |
-      $(imageName):$(Build.BuildId)
+      $(Build.BuildId)
 
 - task: Docker@2
   displayName: Push Docker Image

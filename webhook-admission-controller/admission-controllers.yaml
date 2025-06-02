@@ -73,14 +73,13 @@ webhooks:
   - name: validating-tenant.edcelvista.com
     rules:
       - apiGroups:
-        - ''
+        - 'capsule.clastix.io'
         apiVersions:
-        - 'v1'
+        - 'v1beta2'
         operations:
-        - CREATE
         - UPDATE
         resources:
-        - 'tenant'
+        - 'tenants'
         scope: 'Cluster'
     clientConfig:
       # url: https://webhook.custom-webhook.svc.cluster.local/webhook/validating/tenant

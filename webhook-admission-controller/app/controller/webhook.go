@@ -215,12 +215,17 @@ func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) 
 
 	var warnings []string
 
-	if tenant.Spec.ResourceQuotas != tenantOld.Spec.ResourceQuotas {
+	objString, _ := json.Marshal(tenant.Spec.ResourceQuotas)
+	oldObjString, _ := json.Marshal(tenantOld.Spec.ResourceQuotas)
+
+	if string(objString) != string(oldObjString) {
 		res.Allowed = true
-		warnings = append(warnings, fmt.Sprint("Detected Resource Quota Changes..."))
+		warnings = append(warnings, "Detected Resource Quota Changes...")
 	} else {
 		res.Allowed = true
 	}
+
+	log.Printf("💡 OLD %v |<>| NEW %v", string(oldObjString), string(objString))
 
 	message := strings.Join(warnings, " | ")
 	res.Result = &metav1.Status{

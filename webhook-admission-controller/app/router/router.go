@@ -78,8 +78,9 @@ func (m *Router) PingRoutes() *mux.Router {
 
 func (m *Router) WebhookRoutes() *mux.Router {
 	m.r.HandleFunc("/webhook/{name}", Controller.WebhookHandlerGET).Methods("GET")
-	m.r.HandleFunc("/webhook/validating/{name}", Controller.WebhookValidatingHandlerPOST).Methods("POST")
-	m.r.HandleFunc("/webhook/mutating/{name}", Controller.WebhookMutatingHandlerPOST).Methods("POST")
+	m.r.HandleFunc("/webhook/validating/pod", Controller.WebhookValidatingHandlerPOSTPod).Methods("POST")
+	m.r.HandleFunc("/webhook/mutating/pod", Controller.WebhookMutatingHandlerPOSTPod).Methods("POST")
+	m.r.HandleFunc("/webhook/validating/tenant", Controller.WebhookValidatingHandlerPOSTTenant).Methods("POST")
 	return m.r
 }
 

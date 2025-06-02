@@ -5,3 +5,4 @@ secret-checker/app/arm/app-linux-arm64
 webhook-admission-controller/app/app-linux
 webhook-admission-controller/app/arm/app-linux-arm64
 vendor
+webhook-admission-controller/tls.key

@@ -33,7 +33,7 @@ func WebhookHandlerGET(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
+func WebhookValidatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
 
@@ -103,7 +103,7 @@ func WebhookValidatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }
 
-func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
+func WebhookMutatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	reqParams := mux.Vars(r)
 
@@ -164,5 +164,76 @@ func WebhookMutatingHandlerPOST(w http.ResponseWriter, r *http.Request) {
 
 	jsonData, _ := json.Marshal(admissionReviewResp)
 	Lib.Debug(fmt.Sprintf("[MUT] [RES] %+v", string(jsonData)))
+	json.NewEncoder(w).Encode(admissionReviewResp)
+}
+
+func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	reqParams := mux.Vars(r)
+
+	// Parse JSON from request body
+	var admissionReviewReq admissionv1.AdmissionReview
+	var admissionReviewResp admissionv1.AdmissionReview
+
+	bodyBytes, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
+	Lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+
+	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
+	if err != nil {
+		log.Printf("‼️ Error Validating Webhook %v", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if admissionReviewReq.Request == nil {
+		log.Println("‼️ AdmissionReview.Request is nil")
+		http.Error(w, "Invalid AdmissionReview", http.StatusBadRequest)
+		return
+	}
+
+	var tenant Model.Tenant
+	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &tenant); err != nil {
+		log.Println("‼️ Error Validating Webhook could not unmarshal raw tenant object")
+		http.Error(w, "could not unmarshal raw tenant object", http.StatusBadRequest)
+		return
+	}
+
+	var tenantOld Model.Tenant
+	if err := json.Unmarshal(admissionReviewReq.Request.OldObject.Raw, &tenantOld); err != nil {
+		log.Println("‼️ Error Validating Webhook could not unmarshal raw tenant object")
+		http.Error(w, "could not unmarshal raw tenant object", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("💡 Received Validating Webhook %v event object source %v", reqParams["name"], tenant.ObjectMeta.Name)
+	res := &admissionv1.AdmissionResponse{
+		UID:     admissionReviewReq.Request.UID,
+		Allowed: true,
+	}
+
+	var warnings []string
+
+	if tenant.Spec.ResourceQuotas != tenantOld.Spec.ResourceQuotas {
+		res.Allowed = true
+		warnings = append(warnings, fmt.Sprint("Detected Resource Quota Changes..."))
+	} else {
+		res.Allowed = true
+	}
+
+	message := strings.Join(warnings, " | ")
+	res.Result = &metav1.Status{
+		Message: message,
+	}
+
+	log.Printf("⚡️ Validating Webhook Message [%v]: %v", tenant.ObjectMeta.Name, Lib.DefaultIfEmpty(message, "no-message"))
+
+	// Build response
+	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
+	admissionReviewResp.Response = res
+
+	jsonData, _ := json.Marshal(admissionReviewResp)
+	Lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }

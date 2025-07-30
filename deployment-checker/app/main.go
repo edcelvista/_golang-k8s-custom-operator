@@ -219,7 +219,7 @@ func checkNodes(ctx context.Context) {
 
 	log.Printf("🖥️  NODES: %+v", len(nodes.Items))
 	for _, v := range nodes.Items {
-		log.Println("⚡️ ", v.Name, v.Status.NodeInfo.KubeletVersion, v.Status.NodeInfo.Architecture, v.Status.NodeInfo.MachineID, v.Status.Conditions[4])
+		log.Println("⚡️ ", v.Name, v.Status.NodeInfo.KubeletVersion, v.Status.NodeInfo.Architecture, v.Status.NodeInfo.MachineID)
 	}
 }
 

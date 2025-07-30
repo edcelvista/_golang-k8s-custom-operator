@@ -30,13 +30,13 @@ steps:
     cd deployment-checker/app
     go version
     if [ ! -f go.mod ]; then
-        go mod init edcelvista.com/k8s/myapps
+      go mod init edcelvista.com/k8s/myapps
     fi
     go mod tidy
     go mod download
     if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
+      curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+      dep ensure
     fi
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-deployment-recon-linux-arm64
@@ -47,13 +47,13 @@ steps:
     cd secret-checker/app
     go version
     if [ ! -f go.mod ]; then
-        go mod init edcelvista.com/k8s/myapps
+      go mod init edcelvista.com/k8s/myapps
     fi
     go mod tidy
     go mod download
     if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
+      curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+      dep ensure
     fi
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/custom-operator-secret-recon-linux-arm64
@@ -64,13 +64,13 @@ steps:
     cd webhook-admission-controller/app
     go version
     if [ ! -f go.mod ]; then
-        go mod init edcelvista.com/k8s/myapps
+      go mod init edcelvista.com/k8s/myapps
     fi
     go mod tidy
     go mod download
     if [ -f Gopkg.toml ]; then
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-        dep ensure
+      curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+      dep ensure
     fi
     GOOS=linux GOARCH=amd64 go build -o $(system.defaultWorkingDirectory)/webhook-linux
     # GOOS=linux GOARCH=arm64 go build -o $(system.defaultWorkingDirectory)/webhook-linux-arm64

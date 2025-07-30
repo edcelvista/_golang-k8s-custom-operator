@@ -1,12 +1,13 @@
-FROM ubuntu
+FROM ubuntu:24.04
 LABEL maintainer "administrator@edcelvista.com"
-RUN apt update --fix-missing -y
-RUN apt install net-tools dnsutils nmap -y
-RUN apt install curl git wget -y
+RUN uname -m
+RUN apt-get update --fix-missing -y
+RUN apt-get install net-tools dnsutils nmap -y
+RUN apt-get install curl git wget -y
 RUN wget https://go.dev/dl/go1.24.0.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go1.24.0.linux-amd64.tar.gz
 RUN export PATH=$PATH:/usr/local/go/bin && git clone -b v3.4.35 https://github.com/etcd-io/etcd.git && cd etcd && ./build && export PATH="$PATH:`pwd`/bin"
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/
-RUN apt install telnet vim inetutils-ping -y
+RUN curl -LO "https://dl.k8s.io/release/v1.33.1/bin/linux/amd64/kubectl" && chmod +x kubectl && mv kubectl /usr/local/bin/
+RUN apt-get install telnet vim inetutils-ping -y
 RUN tar -C /usr/local -xzf go1.24.0.linux-amd64.tar.gz && export PATH=$PATH:/usr/local/go/bin
 
 WORKDIR /opt

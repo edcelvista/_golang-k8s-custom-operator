@@ -101,8 +101,8 @@ spec:
               cpu: 100m
               memory: 100Mi
           envFrom:
-            - configMapRef:
-                name: operator-cm
+          - configMapRef:
+              name: operator-cm
           volumeMounts:
           - name: config-volume
             mountPath: "/opt/config"
@@ -286,8 +286,8 @@ spec:
               cpu: 100m
               memory: 100Mi
           envFrom:
-            - configMapRef:
-                name: operator-cm
+          - configMapRef:
+              name: operator-cm
           volumeMounts:
           - name: config-volume
             mountPath: "/opt/config"
@@ -452,8 +452,8 @@ spec:
               cpu: 100m
               memory: 100Mi
           envFrom:
-            - configMapRef:
-                name: webhook-cm
+          - configMapRef:
+              name: webhook-cm
           ports:
           - name: webport
             containerPort: 8443

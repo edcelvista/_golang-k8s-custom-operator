@@ -3,7 +3,6 @@ module _gorestapi-k8s
 go 1.24.0
 
 require (
-	github.com/google/go-cmp v0.7.0
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
 	k8s.io/api v0.33.0

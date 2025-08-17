@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	Lib "_gorestapi-k8s/lib"
-	Model "_gorestapi-k8s/model"
+	lib "_gorestapi-k8s/lib"
+	model "_gorestapi-k8s/model"
 
 	"github.com/gorilla/mux"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -25,8 +25,8 @@ func WebhookHandlerGET(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("💡 Received Webhook for %v", reqParams["name"])
 
-	res := Model.WebhookResponse{
-		WebhookParam: Model.WebhookParam{Name: reqParams["name"]},
+	res := model.WebhookResponse{
+		WebhookParam: model.WebhookParam{Name: reqParams["name"]},
 		Message:      fmt.Sprintf("💡 Received Webhook for %v", reqParams["name"]),
 	}
 
@@ -43,10 +43,9 @@ func WebhookValidatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
-	Lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+	lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
-	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&admissionReviewReq); err != nil {
 		log.Printf("‼️ Error Validating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -92,14 +91,14 @@ func WebhookValidatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 		Message: message,
 	}
 
-	log.Printf("⚡️ Validating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, Lib.DefaultIfEmpty(message, "no-message"))
+	log.Printf("⚡️ Validating Webhook Message [%v/%v]: %v", pod.ObjectMeta.Namespace, pod.ObjectMeta.Name, lib.DefaultIfEmpty(message, "no-message"))
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
-	jsonData, _ := json.Marshal(admissionReviewResp)
-	Lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
+	jsonData, _ := json.Marshal(&admissionReviewResp)
+	lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }
 
@@ -113,10 +112,9 @@ func WebhookMutatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
-	Lib.Debug(fmt.Sprintf("[MUT] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+	lib.Debug(fmt.Sprintf("[MUT] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
-	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&admissionReviewReq); err != nil {
 		log.Printf("‼️ Error Mutating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -145,7 +143,7 @@ func WebhookMutatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 	// Build patch operations
 	patchesJson := os.Getenv("MUTATE_PATCH")
 	if patchesJson == "" {
-		log.Println("‼️ Error Mutating Webhook missing patch object parameter")
+		log.Println("‼️ Error Mutating Webhook missing patch object parameter - ENV: MUTATE_PATCH")
 		http.Error(w, "missing patch object parameter", http.StatusInternalServerError)
 		return
 	}
@@ -162,8 +160,8 @@ func WebhookMutatingHandlerPOSTPod(w http.ResponseWriter, r *http.Request) {
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
-	jsonData, _ := json.Marshal(admissionReviewResp)
-	Lib.Debug(fmt.Sprintf("[MUT] [RES] %+v", string(jsonData)))
+	jsonData, _ := json.Marshal(&admissionReviewResp)
+	lib.Debug(fmt.Sprintf("[MUT] [RES] %+v", string(jsonData)))
 	json.NewEncoder(w).Encode(admissionReviewResp)
 }
 
@@ -177,10 +175,9 @@ func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) 
 
 	bodyBytes, _ := io.ReadAll(r.Body)
 	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) //you want to clone r.Body in Go (so you can read it multiple times).
-	Lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
+	lib.Debug(fmt.Sprintf("[VAL] [REQ] %+v %+v %+v %+v", string(bodyBytes), r.Header, r.Host, r.URL))
 
-	err := json.NewDecoder(r.Body).Decode(&admissionReviewReq)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&admissionReviewReq); err != nil {
 		log.Printf("‼️ Error Validating Webhook %v", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -193,14 +190,14 @@ func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	var tenant Model.Tenant
+	var tenant model.Tenant
 	if err := json.Unmarshal(admissionReviewReq.Request.Object.Raw, &tenant); err != nil {
 		log.Println("‼️ Error Validating Webhook could not unmarshal raw tenant object")
 		http.Error(w, "could not unmarshal raw tenant object", http.StatusBadRequest)
 		return
 	}
 
-	var tenantOld Model.Tenant
+	var tenantOld model.Tenant
 	if err := json.Unmarshal(admissionReviewReq.Request.OldObject.Raw, &tenantOld); err != nil {
 		log.Println("‼️ Error Validating Webhook could not unmarshal raw tenant object")
 		http.Error(w, "could not unmarshal raw tenant object", http.StatusBadRequest)
@@ -215,8 +212,8 @@ func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) 
 
 	var warnings []string
 
-	objString, _ := json.Marshal(tenant.Spec.ResourceQuotas)
-	oldObjString, _ := json.Marshal(tenantOld.Spec.ResourceQuotas)
+	objString, _ := json.Marshal(&tenant.Spec.ResourceQuotas)
+	oldObjString, _ := json.Marshal(&tenantOld.Spec.ResourceQuotas)
 
 	if string(objString) != string(oldObjString) {
 		res.Allowed = true
@@ -232,13 +229,13 @@ func WebhookValidatingHandlerPOSTTenant(w http.ResponseWriter, r *http.Request) 
 		Message: message,
 	}
 
-	log.Printf("⚡️ Validating Webhook Message [%v]: %v", tenant.ObjectMeta.Name, Lib.DefaultIfEmpty(message, "no-message"))
+	log.Printf("⚡️ Validating Webhook Message [%v]: %v", tenant.ObjectMeta.Name, lib.DefaultIfEmpty(message, "no-message"))
 
 	// Build response
 	admissionReviewResp.TypeMeta = admissionReviewReq.TypeMeta
 	admissionReviewResp.Response = res
 
-	jsonData, _ := json.Marshal(admissionReviewResp)
-	Lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
-	json.NewEncoder(w).Encode(admissionReviewResp)
+	jsonData, _ := json.Marshal(&admissionReviewResp)
+	lib.Debug(fmt.Sprintf("[VAL] [RES] %+v", string(jsonData)))
+	json.NewEncoder(w).Encode(&admissionReviewResp)
 }

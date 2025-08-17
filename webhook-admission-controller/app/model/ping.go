@@ -14,3 +14,6 @@ type Echo struct {
 	EchoHeaders interface{}
 	EchoData    interface{}
 }
+type HealthRes struct {
+	Status string
+}

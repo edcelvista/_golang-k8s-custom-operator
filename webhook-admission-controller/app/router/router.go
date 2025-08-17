@@ -2,98 +2,26 @@ package router
 
 import (
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/pem"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gorilla/mux"
 
 	"github.com/joho/godotenv"
 
-	Controller "_gorestapi-k8s/controller"
-	Lib "_gorestapi-k8s/lib"
+	lib "_gorestapi-k8s/lib"
+	routes "_gorestapi-k8s/routes"
 )
 
-type Router struct {
-	r *mux.Router
-}
-
-type CertsAndKeys struct {
-	cert string
-	key  string
-}
-
-func (m *CertsAndKeys) checkCerts() {
-	// Load certificate
-	certPath := m.cert
-	certData, err := ioutil.ReadFile(certPath)
-	if err != nil {
-		log.Fatalf("‼️ Error reading certificate: %v %v", err, m.cert)
-	}
-
-	// Decode the PEM data
-	block, _ := pem.Decode(certData)
-	if block == nil {
-		log.Fatalf("Failed to decode PEM block")
-	}
-
-	// Parse certificate
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		log.Fatalf("‼️ Error parsing certificate: %v %v", err, m.cert)
-	}
-
-	// Check if the certificate is expired
-	currentTime := time.Now()
-	if currentTime.After(cert.NotAfter) {
-		log.Println("‼️ Certificate has expired.")
-	} else {
-		log.Println("💡 Certificate is valid.")
-	}
-
-	// Check the NotBefore field (if the certificate is not yet valid)
-	if currentTime.Before(cert.NotBefore) {
-		log.Println("‼️ Certificate is not yet valid.")
-	} else {
-		log.Println("💡 Certificate is within the valid period.")
-	}
-
-	// Optionally, you could also validate other parts, like the issuer and subject
-	log.Println("🔑 Issuer:", cert.Issuer)
-	log.Println("🔑 Subject:", cert.Subject)
-	log.Println("🔑 Not After:", cert.NotAfter)
-	log.Println("🔑 Not Before:", cert.NotBefore)
-}
-
-func (m *Router) PingRoutes() *mux.Router {
-	m.r.HandleFunc("/ping/{name}", Controller.PingHandlerGET).Methods("GET")
-	m.r.HandleFunc("/ping", Controller.PingHandlerPOST).Methods("POST")
-	m.r.HandleFunc("/echo", Controller.EchoHandlerPOST).Methods("POST")
-	return m.r
-}
-
-func (m *Router) WebhookRoutes() *mux.Router {
-	m.r.HandleFunc("/webhook/{name}", Controller.WebhookHandlerGET).Methods("GET")
-	m.r.HandleFunc("/webhook/validating/pod", Controller.WebhookValidatingHandlerPOSTPod).Methods("POST")
-	m.r.HandleFunc("/webhook/mutating/pod", Controller.WebhookMutatingHandlerPOSTPod).Methods("POST")
-	m.r.HandleFunc("/webhook/validating/tenant", Controller.WebhookValidatingHandlerPOSTTenant).Methods("POST")
-	return m.r
-}
-
-func Run() {
-	// Load .env file
-	err := godotenv.Load()
-	port := ":8443"
-
+func environ() (cert string, key string, port string) {
 	// TLS config
-	cert := "./tls.crt"
-	key := "./tls.key"
+	cert = "./tls.crt"
+	key = "./tls.key"
+	port = ":8443"
 
-	if err != nil {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️ Error loading .env file")
 		// Get environment variables
 		if os.Getenv("PORT") != "" {
@@ -113,15 +41,41 @@ func Run() {
 		log.Println("💡 Found .env")
 	}
 
-	muxRouter := mux.NewRouter()
-	router := Router{
-		r: muxRouter,
+	tlsCertsAndKey := lib.CertsAndKeys{
+		Cert: cert,
+		Key:  key,
 	}
 
+	tlsCertsAndKey.CheckCerts()
+	lib.DebuggerInit()
+
+	return cert, key, port
+}
+
+func registerRouters(router *routes.Router) {
 	router.PingRoutes()
 	router.WebhookRoutes()
+}
 
+func bindRouters(muxRouter *mux.Router) {
+	// Bind the router to the muxRouter
 	http.Handle("/", muxRouter)
+}
+
+func Run() {
+	cert, key, port := environ()
+
+	// Init router
+	muxRouter := mux.NewRouter()
+	router := routes.Router{
+		R: muxRouter,
+	}
+
+	// register routers
+	registerRouters(&router)
+
+	// bind routers
+	bindRouters(muxRouter)
 
 	// TLS config
 	cfg := &tls.Config{
@@ -135,21 +89,11 @@ func Run() {
 		TLSConfig: cfg,
 	}
 
-	tlsCertsAndKey := CertsAndKeys{
-		cert: cert,
-		key:  key,
-	}
-
-	tlsCertsAndKey.checkCerts()
-	Lib.Init()
-
 	log.Printf("💡 ⚡️ Mux API Running 📦 %s with 🔑 %v %v \n", port, cert, key)
 	// err = http.ListenAndServe(port, muxRouter)
 
 	// TLS config
-	err = server.ListenAndServeTLS(cert, key)
-	if err != nil {
+	if err := server.ListenAndServeTLS(cert, key); err != nil {
 		log.Fatalf("‼️ Failed to start router %s with %v %v", err, cert, key)
 	}
-
 }

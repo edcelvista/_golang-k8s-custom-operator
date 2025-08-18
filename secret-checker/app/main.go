@@ -400,7 +400,7 @@ func (m *MyApp) reconcile() {
 				createOptions := metav1.CreateOptions{}
 				createSecret, err := clientSet.CoreV1().Secrets(s.namespace).Create(m.ctx, secretDetail, createOptions)
 				if err != nil {
-					log.Fatalf("‼️ Error creating secret: %v", err)
+					log.Printf("‼️ Error creating secret: %v", err)
 				}
 				log.Printf("⚡️ Created Secret (%v) in (%v)...", createSecret.Name, createSecret.Namespace)
 				isChanged = true

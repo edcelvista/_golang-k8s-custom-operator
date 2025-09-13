@@ -24,15 +24,16 @@ import (
 )
 
 var KUBECONFIG string = "~/.kube/config"
-var TARGETNAMESPACE string = "demo"
+var TARGETNAMESPACE string = "1024-custom-crd"
 
-var CRDNAME string = "myapps.k8s.edcelvista.com"
+var CRDNAME string = "depcheckers.k8s.edcelvista.com"
 var CRDGROUP string = "k8s.edcelvista.com"
 var CRDVERSION string = "v1"
-var CRDRESOURCE string = "myapps"
+var CRDRESOURCE string = "depcheckers"
 
-var APPNAME string = "demo-custom-resource"
-var APPJSONTEMPLATE string = "{ \"apiVersion\": \"apps/v1\", \"kind\": \"Deployment\", \"spec\": { \"selector\": { \"matchLabels\": {} }, \"template\": { \"spec\": { \"containers\": [ { \"command\": [ \"sleep\", \"infinity\" ], \"resources\": {}, \"terminationMessagePath\": \"/dev/termination-log\", \"terminationMessagePolicy\": \"File\", \"imagePullPolicy\": \"IfNotPresent\" } ], \"restartPolicy\": \"Always\", \"terminationGracePeriodSeconds\": 30, \"dnsPolicy\": \"ClusterFirst\", \"securityContext\": {}, \"schedulerName\": \"default-scheduler\" } }, \"strategy\": { \"type\": \"RollingUpdate\", \"rollingUpdate\": { \"maxUnavailable\": \"25%\", \"maxSurge\": \"25%\" } }, \"revisionHistoryLimit\": 10, \"progressDeadlineSeconds\": 600 } }"
+var APPNAME string = "sample-app"
+var APPJSONTEMPLATE string = "{ \"apiVersion\": \"apps/v1\", \"kind\": \"Deployment\", \"metadata\": { \"labels\": { \"app\": \"sample-app\" }, \"name\": \"sample-app\" }, \"spec\": { \"progressDeadlineSeconds\": 600, \"replicas\": 1, \"revisionHistoryLimit\": 10, \"selector\": { \"matchLabels\": { \"app\": \"sample-app\" } }, \"strategy\": { \"rollingUpdate\": { \"maxSurge\": \"25%\", \"maxUnavailable\": \"25%\" }, \"type\": \"RollingUpdate\" }, \"template\": { \"metadata\": { \"creationTimestamp\": null, \"labels\": { \"app\": \"sample-app\", \"custom-webhook.edcelvista.com/mutate-pod\": \"1\", \"custom-webhook.edcelvista.com/validate-pod\": \"1\" } }, \"spec\": { \"containers\": [ { \"command\": [ \"sleep\", \"infinity\" ], \"image\": \"busybox:latest\", \"imagePullPolicy\": \"IfNotPresent\", \"name\": \"sample-app\", \"resources\": { \"limits\": { \"cpu\": \"200m\", \"memory\": \"512Mi\" }, \"requests\": { \"cpu\": \"100m\", \"memory\": \"512Mi\" } }, \"securityContext\": { \"allowPrivilegeEscalation\": false, \"capabilities\": { \"drop\": [ \"ALL\" ] }, \"runAsUser\": 1000 }, \"terminationMessagePath\": \"/dev/termination-log\", \"terminationMessagePolicy\": \"File\" } ], \"dnsPolicy\": \"ClusterFirst\", \"restartPolicy\": \"Always\", \"schedulerName\": \"default-scheduler\", \"securityContext\": { \"fsGroup\": 1000, \"runAsNonRoot\": true, \"seccompProfile\": { \"type\": \"RuntimeDefault\" } }, \"terminationGracePeriodSeconds\": 30 } } } }"
+
 var INTERVAL int = 15
 var K8S_TIMEOUT int32 = 60
 
@@ -92,6 +93,67 @@ func checkRequiredEnv() error {
 	return nil
 }
 
+func createConfigFromRuntimeCreds(k8sAddr string, k8sPort string, k8sCa string, k8sToken string) (string, error) {
+	var clusters []Cluster
+	var contexts []Context
+	var users []User
+
+	k8sCaContent, err := readFileContent(k8sCa, true)
+	if err != nil {
+		log.Fatalf("‼️ Failed to fetch runtime creds content: %v", err)
+	}
+
+	k8sTokenContent, err := readFileContent(k8sToken, false)
+	if err != nil {
+		log.Fatalf("‼️ Failed to fetch runtime creds content: %v", err)
+	}
+
+	cluster := Cluster{
+		Name: "kubernetes-oci",
+		Cluster: ClusterDetails{
+			Server:                   fmt.Sprint("https://%s:%s", k8sAddr, k8sPort),
+			CertificateAuthorityData: k8sCaContent.(string),
+		},
+	}
+
+	context := Context{
+		Name: "kubernetes-oci@kubernetes",
+		Context: ContextDetails{
+			Cluster: "kubernetes-oci",
+			User:    "kubernetes-oci",
+		},
+	}
+
+	user := User{
+		Name: "kubernetes-oci",
+		User: UserDetails{
+			Token: k8sTokenContent.(string),
+		},
+	}
+
+	clusters = append(clusters, cluster)
+	contexts = append(contexts, context)
+	users = append(users, user)
+
+	runtimeConfig := KubeConfig{
+		ApiVersion:     "v1",
+		Kind:           "Config",
+		Clusters:       clusters,
+		Contexts:       contexts,
+		CurrentContext: "kubernetes-oci@kubernetes",
+		Users:          users,
+	}
+
+	jsonBytes, err := json.Marshal(runtimeConfig)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println(string(jsonBytes))
+
+	return string(jsonBytes), nil
+}
+
 func checkKubeConfig() bool {
 	customKubeConfig := os.Getenv("CUSTOM_KUBE_CONFIG_PATH")
 	if customKubeConfig != "" {
@@ -110,6 +172,27 @@ func checkKubeConfig() bool {
 		log.Println("💡 ⚡️ Config in found [Default Home]", homeKubeConfig)
 		KUBECONFIG = homeKubeConfig
 		return true
+	}
+
+	envK8sAddr := os.Getenv("KUBERNETES_PORT_443_TCP_ADDR")
+	envK8sPort := os.Getenv("KUBERNETES_PORT_443_TCP_PORT")
+	envK8sCAFile := "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+	envK8sTokenfile := "/run/secrets/kubernetes.io/serviceaccount/token"
+
+	if envK8sAddr != "" && envK8sPort != "" {
+		_, err := os.Stat(envK8sCAFile)
+		if !os.IsNotExist(err) {
+			log.Printf("💡 ⚡️ Config in found runtime %s not exist", envK8sCAFile)
+			return true
+		}
+		_, err = os.Stat(envK8sTokenfile)
+		if !os.IsNotExist(err) {
+			log.Printf("💡 ⚡️ Config in found runtime %s not exist", envK8sTokenfile)
+			return true
+		}
+
+		runtimeConfig, err := createConfigFromRuntimeCreds(envK8sAddr, envK8sPort, envK8sCAFile, envK8sTokenfile)
+		KUBECONFIG = runtimeConfig
 	}
 
 	log.Println("‼️ Config in not found", KUBECONFIG, homeKubeConfig)

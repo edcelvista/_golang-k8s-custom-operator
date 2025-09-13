@@ -9,7 +9,7 @@ Check and Reconcile app deployments. Create if not exists or Update image tag if
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: myapps.k8s.edcelvista.com
+  name: depcheckers.k8s.edcelvista.com
 spec:
   group: k8s.edcelvista.com
   versions:
@@ -31,39 +31,62 @@ spec:
                   type: string
   scope: Namespaced
   names:
-    plural: myapps
-    singular: myapp
-    kind: MyApp
+    plural: depcheckers
+    singular: depchecker
+    kind: DepChecker
     shortNames:
-    - ma
+    - dc
 ```
 ### CRD Resource
 ```
 apiVersion: "k8s.edcelvista.com/v1"
-kind: MyApp
+kind: DepChecker
 metadata:
-  name: myapp-resource
-  namespace: demo
+  name: depchecker-resource
+  namespace: 1024-custom-crd
 spec:
-  image: edcelvista/ubuntu24-network-tools:53
+  image: edcelvista/k8s-crd:0.0.2
   replicas: 1
-  appSelector: myapp-resource
+  appSelector: depchecker-resource
 ```
 **Note:** Controller scan, check and reconcile app deployments in demo and identify the deployments via label `appSelector: myapp-resource`
 [Complete Flow Diagram](https://raw.githubusercontent.com/edcelvista/_golang-k8s-custom-operator/refs/heads/main/flow-diagram.draw.io.drawio)
-### Role
+### Cluster Role
 ```
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: custom-controller-role
+  name: DepCheckerClusterRole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
-  resources: ["MyApp"]
+  resources: ["DepChecker"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["deployment"]
   verbs: ["create", "get", "update", "list", "watch", "delete"]
+```
+### Cluster Role Binding
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: DepCheckerClusterRole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: DepCheckerClusterRole
+subjects:
+  - kind: ServiceAccount
+    name: DepCheckerClusterRole-sa
+    namespace: 1024-custom-crd
+```
+### Service Account
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: DepCheckerClusterRole-sa
+  namespace: 1024-custom-crd
 ```
 ### Operator
 ```
@@ -88,6 +111,7 @@ spec:
       labels:
         app: custom-operator
     spec:
+      serviceAccountName: DepCheckerClusterRole-sa
       containers:
         - name: custom-operator
           image: edcelvista/ubuntu24-network-tools:53
@@ -104,45 +128,13 @@ spec:
           - configMapRef:
               name: operator-cm
           volumeMounts:
-          - name: config-volume
-            mountPath: "/opt/config"
-            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
       volumes:
-        - name: config-volume
-          configMap:
-            name: kubeconfig
         - name: localtime
           hostPath:
             path: /usr/share/zoneinfo/Asia/Shanghai
       restartPolicy: Always
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: kubeconfig
-data:
-  config: |
-    apiVersion: v1
-    clusters:
-    - cluster:
-        certificate-authority-data: LS0tLS...
-        server: https://172.31.24.226:6443
-      name: kubernetes-aws
-    contexts:
-    - context:
-        cluster: kubernetes-aws
-        user: kubernetes-aws-admin
-      name: kubernetes-aws-admin@kubernetes
-    current-context: kubernetes-aws-admin@kubernetes
-    kind: Config
-    preferences: {}
-    users:
-    - name: kubernetes-aws-admin
-      user:
-        client-certificate-data: LS0tLS...
-        client-key-data: LS0tLS...
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -171,7 +163,7 @@ Check and Reconcile app secrets. Create if not exists or Update secret if outdat
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: sectools.k8s.edcelvista.com
+  name: secretcheckers.k8s.edcelvista.com
 spec:
   group: k8s.edcelvista.com
   versions:
@@ -213,42 +205,63 @@ spec:
                     - data
   scope: Cluster
   names:
-    plural: sectools
-    singular: sectool
-    kind: SecTool
+    plural: secretcheckers
+    singular: secretchecker
+    kind: SecretChecker
     shortNames:
-    - st
+    - sc
 ```
 ### CRD Resource
 ```
 apiVersion: "k8s.edcelvista.com/v1"
-kind: SecTool
+kind: SecretChecker
 metadata:
-  name: sectool-resource
+  name: secretchecker-resource
 spec:
   secret:
     type: kubernetes.io/tls
-    name: edcelvistadotcom-aws-tls
+    name: edcelvistadotcom-tls
     data:
       additionalProperties:
-        tls.crt: >-
-          LS0tLS...
-        tls.key: >-
-          LS0tLS...
+        tls.crt: LS0tLS
+        tls.key: LS0tLS
 ```
 ### Cluster Role
 ```
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: custom-controller-role-st
+  name: SecretCheckerClusterRole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
-  resources: ["SecTool"]
+  resources: ["SecretChecker"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secret"]
   verbs: ["create", "get", "update", "list", "watch", "delete"]
+```
+### Cluster Role Binding
+```
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: SecretCheckerClusterRole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: SecretCheckerClusterRole
+subjects:
+  - kind: ServiceAccount
+    name: SecretCheckerClusterRole-sa
+    namespace: 1024-custom-crd
+```
+### Service Account
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: SecretCheckerClusterRole-sa
+  namespace: 1024-custom-crd
 ```
 ### Operator
 ```
@@ -273,6 +286,7 @@ spec:
       labels:
         app: custom-operator
     spec:
+      serviceAccountName: SecretCheckerClusterRole-sa
       containers:
         - name: custom-operator
           image: edcelvista/ubuntu24-network-tools:53
@@ -289,45 +303,13 @@ spec:
           - configMapRef:
               name: operator-cm
           volumeMounts:
-          - name: config-volume
-            mountPath: "/opt/config"
-            readOnly: true
           - name: localtime
             mountPath: /etc/localtime
       volumes:
-        - name: config-volume
-          configMap:
-            name: kubeconfig
         - name: localtime
           hostPath:
             path: /usr/share/zoneinfo/Asia/Shanghai
       restartPolicy: Always
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: kubeconfig
-data:
-  config: |
-    apiVersion: v1
-    clusters:
-    - cluster:
-        certificate-authority-data: LS0tLS...
-        server: https://172.31.24.226:6443
-      name: kubernetes-aws
-    contexts:
-    - context:
-        cluster: kubernetes-aws
-        user: kubernetes-aws-admin
-      name: kubernetes-aws-admin@kubernetes
-    current-context: kubernetes-aws-admin@kubernetes
-    kind: Config
-    preferences: {}
-    users:
-    - name: kubernetes-aws-admin
-      user:
-        client-certificate-data: LS0tLS...
-        client-key-data: LS0tLS...
 ---
 kind: ConfigMap
 apiVersion: v1

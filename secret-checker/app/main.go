@@ -23,14 +23,13 @@ import (
 )
 
 var KUBECONFIG string = "~/.kube/config"
-var EXCLUDENAMESPACE string = "argocd,castai-agent,custom-operator,default,krakend,kube-bench,kube-flannel,kube-node-lease,kube-public,kube-system,kyverno,monitoring,nginx-ingress"
-
-var CRDNAME string = "sectools.k8s.edcelvista.com"
+var EXCLUDENAMESPACE string = "1024-custom-crd,capsule-system,csi-driver-nfs,default,gatekeeper-system,ingress-nginx,kube-node-lease,kube-public,kube-system,kubernetes-dashboard,node-local-dns,tenant-service-accounts"
+var CRDNAME string = "secretcheckers.k8s.edcelvista.com"
 var CRDGROUP string = "k8s.edcelvista.com"
 var CRDVERSION string = "v1"
-var CRDRESOURCE string = "sectools"
+var CRDRESOURCE string = "secretcheckers"
 
-var APPNAME string = "edcelvistadotcom-aws-tls"
+var APPNAME string = "edcelvistadotcom-tls"
 var INTERVAL int = 15
 var K8S_TIMEOUT int32 = 60
 

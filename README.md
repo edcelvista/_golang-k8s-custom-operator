@@ -144,7 +144,7 @@ apiVersion: v1
 metadata:
   name: operator-cm
 data:
-  CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
+  # CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
   CRDNAME: "myapps.k8s.edcelvista.com"
   CRDGROUP: "k8s.edcelvista.com"
   CRDRESOURCE: "myapps"
@@ -322,7 +322,7 @@ apiVersion: v1
 metadata:
   name: operator-cm
 data:
-  CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
+  # CUSTOM_KUBE_CONFIG_PATH: "/opt/config/config"
   CRDNAME: "sectools.k8s.edcelvista.com"
   CRDGROUP: "k8s.edcelvista.com"
   CRDRESOURCE: "sectools"

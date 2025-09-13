@@ -56,7 +56,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: DepCheckerClusterRole
+  name: depcheckerclusterrole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
   resources: ["DepChecker"]
@@ -70,14 +70,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: DepCheckerClusterRole-binding
+  name: depcheckerclusterrole-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: DepCheckerClusterRole
+  name: depcheckerclusterrole
 subjects:
   - kind: ServiceAccount
-    name: DepCheckerClusterRole-sa
+    name: depcheckerclusterrole-sa
     namespace: 1024-custom-crd
 ```
 ### Service Account
@@ -85,7 +85,7 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: DepCheckerClusterRole-sa
+  name: depcheckerclusterrole-sa
   namespace: 1024-custom-crd
 ```
 ### Operator
@@ -111,7 +111,7 @@ spec:
       labels:
         app: custom-operator
     spec:
-      serviceAccountName: DepCheckerClusterRole-sa
+      serviceAccountName: depcheckerclusterrole-sa
       containers:
         - name: custom-operator
           image: edcelvista/ubuntu24-network-tools:53
@@ -231,7 +231,7 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: SecretCheckerClusterRole
+  name: secretcheckerclusterrole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
   resources: ["SecretChecker"]
@@ -245,14 +245,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: SecretCheckerClusterRole-binding
+  name: secretcheckerclusterrole-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: SecretCheckerClusterRole
+  name: secretcheckerclusterrole
 subjects:
   - kind: ServiceAccount
-    name: SecretCheckerClusterRole-sa
+    name: secretcheckerclusterrole-sa
     namespace: 1024-custom-crd
 ```
 ### Service Account
@@ -260,7 +260,7 @@ subjects:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: SecretCheckerClusterRole-sa
+  name: secretcheckerclusterrole-sa
   namespace: 1024-custom-crd
 ```
 ### Operator
@@ -286,7 +286,7 @@ spec:
       labels:
         app: custom-operator
     spec:
-      serviceAccountName: SecretCheckerClusterRole-sa
+      serviceAccountName: secretcheckerclusterrole-sa
       containers:
         - name: custom-operator
           image: edcelvista/ubuntu24-network-tools:53

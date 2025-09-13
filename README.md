@@ -67,6 +67,9 @@ rules:
 - apiGroups: [""]
   resources: ["nodes"]
   verbs: [ "get", "list", "watch"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: [ "get", "list", "watch"]
 ```
 ### Cluster Role Binding
 ```
@@ -244,6 +247,9 @@ rules:
   verbs: ["create", "get", "update", "list", "watch", "delete"]
 - apiGroups: [""]
   resources: ["nodes"]
+  verbs: [ "get", "list", "watch"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
   verbs: [ "get", "list", "watch"]
 ```
 ### Cluster Role Binding

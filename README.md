@@ -64,6 +64,9 @@ rules:
 - apiGroups: [""]
   resources: ["deployment"]
   verbs: ["create", "get", "update", "list", "watch", "delete"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: [ "get", "list", "watch"]
 ```
 ### Cluster Role Binding
 ```
@@ -239,6 +242,9 @@ rules:
 - apiGroups: [""]
   resources: ["secret"]
   verbs: ["create", "get", "update", "list", "watch", "delete"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: [ "get", "list", "watch"]
 ```
 ### Cluster Role Binding
 ```

@@ -93,67 +93,6 @@ func checkRequiredEnv() error {
 	return nil
 }
 
-func createConfigFromRuntimeCreds(k8sAddr string, k8sPort string, k8sCa string, k8sToken string) (string, error) {
-	var clusters []Cluster
-	var contexts []Context
-	var users []User
-
-	k8sCaContent, err := readFileContent(k8sCa, true)
-	if err != nil {
-		log.Fatalf("‼️ Failed to fetch runtime creds content: %v", err)
-	}
-
-	k8sTokenContent, err := readFileContent(k8sToken, false)
-	if err != nil {
-		log.Fatalf("‼️ Failed to fetch runtime creds content: %v", err)
-	}
-
-	cluster := Cluster{
-		Name: "kubernetes-oci",
-		Cluster: ClusterDetails{
-			Server:                   fmt.Sprint("https://%s:%s", k8sAddr, k8sPort),
-			CertificateAuthorityData: k8sCaContent.(string),
-		},
-	}
-
-	context := Context{
-		Name: "kubernetes-oci@kubernetes",
-		Context: ContextDetails{
-			Cluster: "kubernetes-oci",
-			User:    "kubernetes-oci",
-		},
-	}
-
-	user := User{
-		Name: "kubernetes-oci",
-		User: UserDetails{
-			Token: k8sTokenContent.(string),
-		},
-	}
-
-	clusters = append(clusters, cluster)
-	contexts = append(contexts, context)
-	users = append(users, user)
-
-	runtimeConfig := KubeConfig{
-		ApiVersion:     "v1",
-		Kind:           "Config",
-		Clusters:       clusters,
-		Contexts:       contexts,
-		CurrentContext: "kubernetes-oci@kubernetes",
-		Users:          users,
-	}
-
-	jsonBytes, err := json.Marshal(runtimeConfig)
-	if err != nil {
-		return "", err
-	}
-
-	fmt.Println(string(jsonBytes))
-
-	return string(jsonBytes), nil
-}
-
 func checkKubeConfig() bool {
 	customKubeConfig := os.Getenv("CUSTOM_KUBE_CONFIG_PATH")
 	if customKubeConfig != "" {
@@ -172,27 +111,6 @@ func checkKubeConfig() bool {
 		log.Println("💡 ⚡️ Config in found [Default Home]", homeKubeConfig)
 		KUBECONFIG = homeKubeConfig
 		return true
-	}
-
-	envK8sAddr := os.Getenv("KUBERNETES_PORT_443_TCP_ADDR")
-	envK8sPort := os.Getenv("KUBERNETES_PORT_443_TCP_PORT")
-	envK8sCAFile := "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-	envK8sTokenfile := "/run/secrets/kubernetes.io/serviceaccount/token"
-
-	if envK8sAddr != "" && envK8sPort != "" {
-		_, err := os.Stat(envK8sCAFile)
-		if !os.IsNotExist(err) {
-			log.Printf("💡 ⚡️ Config in found runtime %s not exist", envK8sCAFile)
-			return true
-		}
-		_, err = os.Stat(envK8sTokenfile)
-		if !os.IsNotExist(err) {
-			log.Printf("💡 ⚡️ Config in found runtime %s not exist", envK8sTokenfile)
-			return true
-		}
-
-		runtimeConfig, err := createConfigFromRuntimeCreds(envK8sAddr, envK8sPort, envK8sCAFile, envK8sTokenfile)
-		KUBECONFIG = runtimeConfig
 	}
 
 	log.Println("‼️ Config in not found", KUBECONFIG, homeKubeConfig)

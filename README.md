@@ -59,7 +59,7 @@ metadata:
   name: depcheckerclusterrole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
-  resources: ["DepChecker"]
+  resources: ["depchecker"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["deployment"]
@@ -240,7 +240,7 @@ metadata:
   name: secretcheckerclusterrole
 rules:
 - apiGroups: ["k8s.edcelvista.com"]
-  resources: ["SecretChecker"]
+  resources: ["secretchecker"]
   verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secret"]

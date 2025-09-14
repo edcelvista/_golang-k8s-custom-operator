@@ -29,7 +29,6 @@ var CRDGROUP string = "k8s.edcelvista.com"
 var CRDVERSION string = "v1"
 var CRDRESOURCE string = "secretcheckers"
 
-var APPNAME string = "edcelvistadotcom-tls"
 var INTERVAL int = 15
 var K8S_TIMEOUT int32 = 60
 
@@ -38,12 +37,6 @@ func checkRequiredEnv() error {
 	if excludeNs != "" {
 		EXCLUDENAMESPACE = excludeNs
 		log.Println("💡 Env Config in found", EXCLUDENAMESPACE)
-	}
-
-	appName := os.Getenv("APPNAME")
-	if appName != "" {
-		APPNAME = appName
-		log.Println("💡 Env Config in found", APPNAME)
 	}
 
 	crdTarget := os.Getenv("CRDNAME")
@@ -386,7 +379,7 @@ func (m *MyApp) reconcile() {
 
 				secretDetail := &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: APPNAME,
+						Name: s.name,
 					},
 					// Immutable: BoolPtr(true),
 					Type: corev1.SecretTypeTLS,
@@ -396,13 +389,19 @@ func (m *MyApp) reconcile() {
 					},
 				}
 
-				createOptions := metav1.CreateOptions{}
-				createSecret, err := clientSet.CoreV1().Secrets(s.namespace).Create(m.ctx, secretDetail, createOptions)
-				if err != nil {
-					log.Printf("‼️ Error creating secret: %v", err)
+				getOptions := metav1.GetOptions{}
+				_, err := clientSet.CoreV1().Secrets(s.namespace).Get(m.ctx, s.name, getOptions)
+				if err == nil {
+					log.Printf("⚠️ Warning already exists: %v", err)
+				} else {
+					createOptions := metav1.CreateOptions{}
+					createSecret, err := clientSet.CoreV1().Secrets(s.namespace).Create(m.ctx, secretDetail, createOptions)
+					if err != nil {
+						log.Printf("‼️ Error creating secret: %v", err)
+					}
+					log.Printf("⚡️ Created Secret (%v) in (%v)...", createSecret.Name, createSecret.Namespace)
+					isChanged = true
 				}
-				log.Printf("⚡️ Created Secret (%v) in (%v)...", createSecret.Name, createSecret.Namespace)
-				isChanged = true
 			} else {
 				existingSecretType := string(secretTarget.Type)
 				existingSecretTlsCrt := string(secretTarget.Data["tls.crt"])

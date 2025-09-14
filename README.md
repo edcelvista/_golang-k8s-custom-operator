@@ -337,7 +337,6 @@ data:
   CRDRESOURCE: "sectools"
   CRDVERSION: "v1"
   EXCLUDENAMESPACE: "argocd,castai-agent,custom-operator,default,krakend,kube-bench,kube-flannel,kube-node-lease,kube-public,kube-system,kyverno,monitoring,nginx-ingress"
-  APPNAME: "edcelvistadotcom-aws-tls"
   INVERVAL: "30"
 ```
 **Note:** Operator controls and dictates the what namespace to be excluded in secret injection.
